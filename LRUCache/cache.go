@@ -1,9 +1,10 @@
 package LRUCache
 
 import (
-	//"fmt"
 	"container/list"
 )
+
+const( DEFAULT_CAPACITY = 5 )
 
 type Node struct{
 	key string
@@ -16,16 +17,21 @@ type Cache struct{
 	hashmap map[string] *list.Element
 }
 
-func CacheConstructor (capacity int) Cache{
+func cacheConstructor (capacity int) *Cache{
 	cache := Cache{}
+
+	if capacity <= 0{
+		capacity = DEFAULT_CAPACITY
+	}
+
 	cache.capacity = capacity
 	cache.list = list.New()
 	cache.hashmap = make(map[string]*list.Element, capacity)
 
-	return cache
+	return &cache
 }
 
-func (cache *Cache) Add(key string, value []byte){
+func (cache *Cache) add(key string, value []byte){
 	element, exists := cache.hashmap[key]
 	if exists{
 		cache.list.MoveToBack(element)
@@ -36,27 +42,25 @@ func (cache *Cache) Add(key string, value []byte){
 	}else{
 		//cache is full -> remove LRU (front of list)
 		if cache.capacity == cache.list.Len(){
-			cache.RemoveLRU()
+			cache.removeLRU()
 		}
 
-		node := &list.Element{
-			Value: Node{
-				key: key,
-				value: value,
-			},
+		node := Node {
+			key: key,
+			value: value,
 		}
-		cache.list.PushBack(node.Value)
-		cache.hashmap[key] = node
+		element := cache.list.PushBack(node)
+		cache.hashmap[key] = element
 	}
 }
 
-func (cache *Cache) RemoveLRU(){
+func (cache *Cache) removeLRU(){
 	lru := cache.list.Front()
 	cache.list.Remove(lru)
 	delete(cache.hashmap, lru.Value.(Node).key)
 }
 
-func (cache *Cache) Get(key string) (bool, []byte){
+func (cache *Cache) get(key string) (bool, []byte){
 	element, exists := cache.hashmap[key]
 	if exists{
 		cache.list.MoveToBack(element)
@@ -64,5 +68,3 @@ func (cache *Cache) Get(key string) (bool, []byte){
 	}
 	return false, nil
 }
-
-
