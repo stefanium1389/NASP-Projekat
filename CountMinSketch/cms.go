@@ -29,26 +29,26 @@ func CountMinSketchConstructor(epsilon, delta float64) *CountMinSketch{
 
 func (cms *CountMinSketch) Add(key string) {
 	for i:= 0; i< int(cms.kNum); i++{
-		hasher := cms.hashFuncs[i]
-		_, err := hasher.Write([]byte(key))
+		_, err := cms.hashFuncs[i].Write([]byte(key))
 		if err != nil {
 			panic(err)
 		}
-		colValue := hasher.Sum32() % cms.mNum
+		colValue := cms.hashFuncs[i].Sum32() % cms.mNum
 		cms.table[i][colValue] += 1
+		cms.hashFuncs[i].Reset()
 	}
 }
 
 func (cms *CountMinSketch) GetFrequency(key string) uint{
 	result := make([]uint, cms.kNum, cms.kNum)
 	for i:=0; i < int(cms.kNum) ; i++{
-		hasher := cms.hashFuncs[i]
-		_, err := hasher.Write([]byte(key))
+		_, err := cms.hashFuncs[i].Write([]byte(key))
 		if err != nil {
 			panic(err)
 		}
-		colValue := hasher.Sum32() % cms.mNum
+		colValue := cms.hashFuncs[i].Sum32() % cms.mNum
 		result[i] = cms.table[i][colValue]
+		cms.hashFuncs[i].Reset()
 	}
 
 	min:= result[0]
