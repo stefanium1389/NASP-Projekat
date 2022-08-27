@@ -1,9 +1,11 @@
-package main
+package BloomFilter
 
 import (
+	"encoding/gob"
 	"github.com/spaolacci/murmur3"
 	"hash"
 	"math"
+	"os"
 	"time"
 )
 
@@ -49,14 +51,23 @@ func CreateHashFunctions(hashSize int) []hash.Hash32 {
 	return hash
 }
 
-func CreateBloom(capacity int, ratio float64) *BloomFilter {
+func CreateBloom(capacity int, ratio float64) *BloomStruct {
 	dataSize := int(math.Ceil(float64(capacity) * math.Abs(math.Log(ratio)) / math.Pow(math.Log(2), float64(2))))
 	hashSize := int(math.Ceil((float64(dataSize) / float64(capacity)) * math.Log(2)))
-	var bf BloomFilter = BloomStruct{
+	bf := BloomStruct{
 		dataSize: dataSize,
 		hashSize: hashSize,
 		data:     make([]byte, dataSize),
 		hash:     CreateHashFunctions(hashSize),
 	}
 	return &bf
+}
+
+func (bs *BloomStruct) WriteBloomFilter(file *os.File) {
+	defer file.Close()
+	encoder := gob.NewEncoder(file)
+	err := encoder.Encode(bs)
+	if err != nil {
+		panic(err.Error())
+	}
 }
