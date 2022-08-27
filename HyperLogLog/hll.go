@@ -1,10 +1,12 @@
 package HyperLogLog
 
 import (
+	"encoding/gob"
 	"github.com/spaolacci/murmur3"
 	"hash"
 	"math"
 	"math/bits"
+	"os"
 	"time"
 )
 
@@ -74,6 +76,38 @@ func (hll *HyperLogLog) emptyCount() int {
 		}
 	}
 	return sum
+}
+
+func(hll *HyperLogLog) Serialize(fileName string){
+	file, err := os.Open(fileName)
+	if err!= nil{
+		file, err = os.Create(fileName)
+		if err != nil{
+			panic(err)
+		}
+	}
+	encoder := gob.NewEncoder(file)
+	err = encoder.Encode(hll)
+	if err != nil {
+		panic(err)
+	}
+	err = file.Close()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (hll *HyperLogLog) Deserialize(fileName string) {
+	file, err := os.Open(fileName)
+	if err != nil {
+		panic(err)
+	}
+	decoder := gob.NewDecoder(file)
+	err = decoder.Decode(&hll)
+	if err != nil{
+		panic(err)
+	}
+	_ = file.Close()
 }
 
 func CreateHashFunction() hash.Hash32{
