@@ -4,8 +4,6 @@ import (
 	"container/list"
 )
 
-const( DEFAULT_CAPACITY = 5 )
-
 type Node struct{
 	key string
 	value []byte
@@ -19,11 +17,6 @@ type Cache struct{
 
 func cacheConstructor (capacity int) *Cache{
 	cache := Cache{}
-
-	if capacity <= 0{
-		capacity = DEFAULT_CAPACITY
-	}
-
 	cache.capacity = capacity
 	cache.list = list.New()
 	cache.hashmap = make(map[string]*list.Element, capacity)
