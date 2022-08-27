@@ -1,9 +1,11 @@
 package CountMinSketch
 
 import (
+	"encoding/gob"
 	"github.com/spaolacci/murmur3"
 	"hash"
 	"math"
+	"os"
 	"time"
 )
 
@@ -76,4 +78,39 @@ func (cms *CountMinSketch) CreateHashFunctions(k uint32) []hash.Hash32 {
 		h = append(h, murmur3.New32WithSeed(uint32(ts+1)))
 	}
 	return h
+}
+
+func (cms *CountMinSketch) Serialize (fileName string) {
+	file, err := os.Open(fileName)
+	if err != nil {
+		file, err = os.Create(fileName)
+		if err != nil{
+			panic(err)
+		}
+	}
+	encoder:= gob.NewEncoder(file)
+	err = encoder.Encode(cms)
+	if err != nil{
+		panic(err)
+	}
+	err = file.Close()
+	if err != nil{
+		panic(err)
+	}
+}
+
+func(cms *CountMinSketch) Deserialize(fileName string){
+	file, err := os.Open(fileName)
+	if err != nil{
+		panic(err)
+	}
+	decoder := gob.NewDecoder(file)
+	err = decoder.Decode(cms)
+	if err != nil{
+		panic(err)
+	}
+	err = file.Close()
+	if err != nil{
+		panic(err)
+	}
 }
