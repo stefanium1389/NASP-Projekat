@@ -97,7 +97,7 @@ func CreateTOC(level int, file *os.File) {
 	}
 }
 
-func Flush(mt *Memetable.Memtable) {
+func Flush(mt *Memtable.Memtable) {
 	//newFileName := CreateSSTable(1)
 	data, index, toc, fltr, mtData, summ := FilesOfSSTable(CreateSSTable(1), 1)
 	defer data.Close()
