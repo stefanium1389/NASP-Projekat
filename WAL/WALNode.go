@@ -1,6 +1,7 @@
 package WAL
 
 import (
+	"encoding/binary"
 	"hash/crc32"
 	"time"
 )
@@ -20,7 +21,7 @@ import (
 
 type WALNode struct{
 	CRC uint32
-	timeStamp int64
+	timeStamp uint64
 	tombstone byte
 	keySize uint64
 	valueSize uint64
@@ -36,7 +37,7 @@ func NewNode(key, value string) *WALNode{
 	node:= WALNode{}
 
 	node.CRC = CRC32([]byte(key))
-	node.timeStamp = time.Now().Unix()
+	node.timeStamp = uint64(time.Now().Unix())
 	node.tombstone = 0
 	node.key = []byte(key)
 	node.value = []byte(value)
@@ -44,4 +45,25 @@ func NewNode(key, value string) *WALNode{
 	node.valueSize = uint64(len(node.value))
 
 	return &node
+}
+
+func (node *WALNode) Encode() []byte{
+	retVal:= make([]byte, 0)
+
+	arr := make([]byte, 4)
+	binary.LittleEndian.PutUint32(arr, node.CRC)
+	retVal = append(retVal, arr...)
+	arr = make([]byte, 16)
+	binary.LittleEndian.PutUint64(arr, node.timeStamp)
+	retVal = append(retVal, arr...)
+	retVal = append(retVal, node.tombstone)
+	arr = make([]byte, 8)
+	binary.LittleEndian.PutUint64(arr, node.keySize)
+	retVal = append(retVal, arr...)
+	arr = make([]byte, 8)
+	binary.LittleEndian.PutUint64(arr, node.valueSize)
+	retVal = append(retVal, arr...)
+	retVal = append(retVal, node.key...)
+	retVal = append(retVal, node.value...)
+	return retVal
 }
