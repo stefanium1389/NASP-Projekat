@@ -15,7 +15,7 @@ type Cache struct{
 	hashmap map[string] *list.Element
 }
 
-func cacheConstructor (capacity int) *Cache{
+func CacheConstructor(capacity int) *Cache{
 	cache := Cache{}
 	cache.capacity = capacity
 	cache.list = list.New()
@@ -24,7 +24,7 @@ func cacheConstructor (capacity int) *Cache{
 	return &cache
 }
 
-func (cache *Cache) add(key string, value []byte){
+func (cache *Cache) Add(key string, value []byte){
 	element, exists := cache.hashmap[key]
 	if exists{
 		cache.list.MoveToBack(element)
@@ -35,7 +35,7 @@ func (cache *Cache) add(key string, value []byte){
 	}else{
 		//cache is full -> remove LRU (front of list)
 		if cache.capacity == cache.list.Len(){
-			cache.removeLRU()
+			cache.RemoveLRU()
 		}
 
 		node := Node {
@@ -47,17 +47,26 @@ func (cache *Cache) add(key string, value []byte){
 	}
 }
 
-func (cache *Cache) removeLRU(){
+func (cache *Cache) RemoveLRU(){
 	lru := cache.list.Front()
 	cache.list.Remove(lru)
 	delete(cache.hashmap, lru.Value.(Node).key)
 }
 
-func (cache *Cache) get(key string) (bool, []byte){
+func (cache *Cache) Get(key string) (bool, []byte){
 	element, exists := cache.hashmap[key]
 	if exists{
 		cache.list.MoveToBack(element)
 		return true, element.Value.(Node).value
 	}
 	return false, nil
+}
+
+func(cache *Cache) Remove(key string) bool{
+	element, exists := cache.hashmap[key]
+	if exists{
+		cache.list.Remove(element)
+		return true
+	}
+	return false
 }

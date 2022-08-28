@@ -1,11 +1,11 @@
-package Memetable
+package Memtable
 
 import (
 	"fmt"
 	"main/SkipList"
 )
 
-var memTableNum = 0
+//var memTableNum = 0
 
 const (
 	maxLevel = 10
@@ -18,9 +18,9 @@ type Memtable struct {
 
 }
 
-func NewMemtable(maxLevel int, threshold int) *Memtable {
+func NewMemtable(threshold int, maxLevel int, probability float32) *Memtable {
 	return &Memtable{
-		Skiplist:    SkipList.NewSkipList(),
+		Skiplist:    SkipList.NewSkipList(maxLevel, probability),
 		threshold:   threshold,
 		currentSize: 0,
 	}
@@ -30,8 +30,8 @@ func (mt *Memtable) CurrentSize() int {
 	return mt.currentSize
 }
 
-func (mt *Memtable) toFlush() bool {
-	if mt.threshold <= mt.currentSize {
+func (mt *Memtable) toFlush(dataSize int) bool {
+	if mt.threshold <= mt.currentSize + dataSize {
 		return true
 	} else {
 		return false
@@ -41,17 +41,22 @@ func (mt *Memtable) toFlush() bool {
 func (mt *Memtable) Insert(key string, value []byte) bool {
 	node := mt.Find(key) // ovo je kljucna funkcija
 	if node != nil {
-		if node.Tombstone == false {
-			dataSize := len(key) + len(value)
-			mt.currentSize += dataSize
-			// DODATI PROVERU ZA FLUSH PRE DODAVANJA ELEMENTA
-			node.Tombstone = true
+		if node.Tombstone == true {
+			node.Tombstone = false
 			return true
 		}
 	} else {
 		dataSize := len(key) + len(value)
-		mt.currentSize += dataSize
-		return mt.Skiplist.Insert(key, value)
+		toFlush := mt.toFlush(dataSize)
+		if toFlush == false {
+			mt.currentSize += dataSize
+			return mt.Skiplist.Insert(key, value)
+		}else{
+			//Flush()
+			mt.currentSize += dataSize
+			return mt.Skiplist.Insert(key, value)
+		}
+
 	}
 
 	return false
@@ -60,10 +65,7 @@ func (mt *Memtable) Insert(key string, value []byte) bool {
 func (mt *Memtable) Find(key string) *SkipList.Skipnode {
 	node, _ := mt.Skiplist.Search(key)
 	if node != nil {
-		if node.Tombstone == true {
-			return node
-		}
-
+		return node
 	}
 	return nil
 }
@@ -71,7 +73,9 @@ func (mt *Memtable) Find(key string) *SkipList.Skipnode {
 func (mt *Memtable) FindAndDelete(key string) bool {
 	node := mt.Find(key)
 	if node != nil {
-		node.Tombstone = false
+		if node.Tombstone == false{
+			node.Tombstone = true
+		}
 		return true
 	}
 	return false
@@ -89,7 +93,7 @@ func (mt *Memtable) PrintMt() {
 }
 
 func test() {
-	mt := NewMemtable(100, 20)
+	mt := NewMemtable( 20, 15, 0.5)
 	mt.Insert("1", []byte("pozdrav1"))
 	mt.Insert("2", []byte("pozdrav2"))
 	mt.Insert("4", []byte("pozdrav4"))

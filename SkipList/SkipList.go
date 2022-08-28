@@ -9,7 +9,7 @@ import (
 
 const (
 	DefaultMaxLevel    int     = 15   //Maximal level allow to create in this skip list
-	DefaultPropobility float32 = 0.25 //Default propobility
+	//DefaultProbability float32 = 0.25 //Default Probability
 )
 
 type Skipnode struct {
@@ -23,7 +23,7 @@ type Skipnode struct {
 type Skiplist struct {
 	Header *Skipnode
 	MaxLevel    int
-	Propobility float32
+	Probability float32
 	Level int
 }
 
@@ -35,10 +35,10 @@ func NewNode(searchKey string, value []byte, createLevel int, maxLevel int) *Ski
 	return &Skipnode{Key: searchKey, Value: value, Forward: forwardEmpty, Level: createLevel}
 }
 
-func NewSkipList() *Skiplist {
-	newList := &Skiplist{Header: NewNode("", nil, 1, DefaultMaxLevel), Level: 1}
-	newList.MaxLevel = DefaultMaxLevel       //default
-	newList.Propobility = DefaultPropobility //default
+func NewSkipList(maxLevel int, probability float32) *Skiplist {
+	newList := &Skiplist{Header: NewNode("", nil, 1, maxLevel), Level: 1}
+	newList.MaxLevel = maxLevel       //default
+	newList.Probability = probability //default
 	return newList
 }
 
@@ -58,13 +58,12 @@ func NewHead() *Skipnode {
 
 func (b *Skiplist) Empty() {
 	b.Header = NewHead()
-	b.Level = 0
-	b.MaxLevel = DefaultMaxLevel
+	b.Level = 1
 }
 
 func (b *Skiplist) RandomLevel() int {
 	level := 1
-	for randomP() < b.Propobility && level < b.MaxLevel {
+	for randomP() < b.Probability && level < b.MaxLevel {
 		level++
 	}
 	return level
@@ -122,24 +121,20 @@ func (b *Skiplist) Insert(searchKey string, value []byte) bool {
 }
 
 func (b *Skiplist) Delete(searchKey string) error {
-	updateList := make([]*Skipnode, b.MaxLevel)
 	currentNode := b.Header
 
 	for i := b.Header.Level - 1; i >= 0; i-- {
 		for currentNode.Forward[i] != nil && currentNode.Forward[i].Key < searchKey {
 			currentNode = currentNode.Forward[i]
 		}
-		updateList[i] = currentNode
 	}
 
 	currentNode = currentNode.Forward[0]
 
 	if currentNode.Key == searchKey {
 		for i := 0; i <= currentNode.Level-1; i++ {
-			if updateList[i].Forward[i] != nil && updateList[i].Forward[i].Key != currentNode.Key {
-				break
-			}
-			updateList[i].Forward[i] = currentNode.Forward[i]
+			currentNode.Tombstone = true
+			
 		}
 
 		for currentNode.Level > 1 && b.Header.Forward[currentNode.Level] == nil {

@@ -1,4 +1,4 @@
-package main
+package TokenBucket
 
 import (
 	"time"
@@ -11,7 +11,7 @@ type TokenBucket struct{
 	resetInterval int64
 }
 
-func tokenBucketConstructor(maxTokenNum int, resetInterval int64) *TokenBucket{
+func TokenBucketConstructor(maxTokenNum int, resetInterval int64) *TokenBucket{
 	tb := TokenBucket{}
 	tb.lastReset = time.Now().Unix()
 	tb.maxTokenNum = maxTokenNum
