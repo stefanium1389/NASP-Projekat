@@ -1,11 +1,11 @@
 package CountMinSketch
 
 import (
+	"bytes"
 	"encoding/gob"
 	"github.com/spaolacci/murmur3"
 	"hash"
 	"math"
-	"os"
 	"time"
 )
 
@@ -81,39 +81,22 @@ func CreateHashFunctions(k uint32, timeStamp uint) []hash.Hash32 {
 	return h
 }
 
-func (cms *CountMinSketch) Serialize (fileName string) {
-	file, err := os.Open(fileName)
+func (cms *CountMinSketch) Encode() []byte {
+	encoded := bytes.Buffer{}
+	encoder := gob.NewEncoder(&encoded)
+	err := encoder.Encode(cms)
 	if err != nil {
-		file, err = os.Create(fileName)
-		if err != nil{
-			panic(err)
-		}
+		panic(err.Error())
 	}
-	cms.hashFuncs = nil
-	encoder:= gob.NewEncoder(file)
-	err = encoder.Encode(&cms)
-	if err != nil{
-		panic(err)
-	}
-	err = file.Close()
-	if err != nil{
-		panic(err)
-	}
+	return encoded.Bytes()
 }
 
-func(cms *CountMinSketch) Deserialize(fileName string){
-	file, err := os.Open(fileName)
-	if err != nil{
-		panic(err)
+func(cms *CountMinSketch) Decode(data []byte){
+	encoded := bytes.NewBuffer(data)
+	decoder := gob.NewDecoder(encoded)
+	err := decoder.Decode(cms)
+	if err != nil {
+		panic(err.Error())
 	}
-	decoder := gob.NewDecoder(file)
-	err = decoder.Decode(&cms)
 	cms.hashFuncs = CreateHashFunctions(cms.kNum, cms.timeStamp)
-	if err != nil{
-		panic(err)
-	}
-	err = file.Close()
-	if err != nil{
-		panic(err)
-	}
 }

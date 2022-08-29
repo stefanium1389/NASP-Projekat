@@ -27,14 +27,14 @@ func NewProcessor() *Processor{
 	return &processor
 }
 
-func (processor *Processor) Put(key, value string) bool{
+func (processor *Processor) Put(key string, value []byte) bool{
 	if !processor.tokenBucket.ProcessRequest(){
 		fmt.Println("Prekoracili ste dozvoljeni broj zahteva u jedinici vremena")
 		return false
 	}
-	processor.cache.Add(key, []byte(value))
+	processor.cache.Add(key, value)
 	// TODO add to WAL
-	success := processor.memtable.Insert(key, []byte(value))
+	success := processor.memtable.Insert(key, value)
 	if !success{
 		return false
 	}

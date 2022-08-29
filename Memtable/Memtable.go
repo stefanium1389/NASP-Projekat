@@ -2,6 +2,7 @@ package Memtable
 
 import (
 	"fmt"
+	"main/SSTable"
 	"main/SkipList"
 )
 
@@ -63,8 +64,7 @@ func (mt *Memtable) Insert(key string, value []byte) bool {
 }
 
 func (mt *Memtable) Flush(){
-
-	// TODO Flush into SSTable
+	SSTable.Flush(mt)
 
 	mt.Empty()
 }

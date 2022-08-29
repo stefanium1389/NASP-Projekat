@@ -34,7 +34,7 @@ func (cache *Cache) Add(key string, value []byte){
 
 	if exists{
 		cache.list.MoveToBack(element)
-		
+
 	}else{
 		//cache is full -> remove LRU (front of list)
 		if cache.capacity == cache.list.Len(){
