@@ -6,7 +6,7 @@ import (
 )
 
 type Config struct{
-	HllP uint `yaml:"hll_p"`
+	HllP int `yaml:"hll_p"`
 	CacheCapacity int `yaml:"cache_capacity"`
 	TokenBucketResetInterval int64 `yaml:"token_bucket_reset_interval"`
 	TokenBucketMaxTokenNum int `yaml:"token_bucket_max_token_num"`
@@ -35,7 +35,7 @@ func Load() *Config{
 		config.WALSegment = 5
 		config.WALLowMark = 3
 	}
-	err = yaml.Unmarshal(data, config)
+	err = yaml.Unmarshal(data, &config)
 	if err != nil {
 		panic(err)
 	}

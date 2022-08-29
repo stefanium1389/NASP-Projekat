@@ -30,7 +30,13 @@ func ReadInput() (string, string){
 
 func Put(){
 	key, value := ReadInput()
-	processor.Put(key, value)
+	success := processor.Put(key, value)
+
+	if success{
+		fmt.Println("Dodavanje je uspesno.")
+	}else{
+		fmt.Println("Dodavanje nije uspelo.")
+	}
 }
 
 func main(){

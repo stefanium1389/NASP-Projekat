@@ -21,7 +21,7 @@ func NewTokenBucket(maxTokenNum int, resetInterval int64) *TokenBucket{
 	return &tb
 }
 
-func (tokenBucket *TokenBucket) processRequest() bool{
+func (tokenBucket *TokenBucket) ProcessRequest() bool{
 	currentTime := time.Now().Unix()
 	if  currentTime - tokenBucket.lastReset >= tokenBucket.resetInterval{
 		tokenBucket.lastReset = currentTime

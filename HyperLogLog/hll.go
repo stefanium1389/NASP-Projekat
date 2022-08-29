@@ -13,11 +13,11 @@ import (
 type HyperLogLog struct{
 	registers []uint
 	m         uint32	//set size
-	p         uint	//number of leading bits
+	p         int	//number of leading bits
 	hash hash.Hash32
 }
 
-func NewHyperLogLog(p uint) *HyperLogLog {
+func NewHyperLogLog(p int) *HyperLogLog {
 	hll := HyperLogLog{}
 	hll.m = uint32(math.Pow(2, float64(p)))
 	hll.hash = CreateHashFunction()

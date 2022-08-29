@@ -13,7 +13,7 @@ const (
 
 type Memtable struct {
 	Skiplist    *SkipList.Skiplist // podaci
-	threshold   int                // maksimalni kapacitet(u bajtovima) tj. prag zapisa (kad se dosegne, vrsi se flus\
+	threshold   int                // maksimalni kapacitet tj. prag zapisa (kad se dosegne, vrsi se flus\
 	currentSize int                // trenutni broj elemenata
 
 }
@@ -62,6 +62,10 @@ func (mt *Memtable) Insert(key string, value []byte) bool {
 	return false
 }
 
+func (mt *Memtable) Flush(){
+
+}
+
 func (mt *Memtable) Find(key string) *SkipList.Skipnode {
 	node, _ := mt.Skiplist.Search(key)
 	if node != nil {
@@ -92,8 +96,7 @@ func (mt *Memtable) PrintMt() {
 	mt.Skiplist.DisplayAll()
 }
 
-func test() {
-	mt := NewMemtable( 20, 15, 0.5)
+func (mt *Memtable) Test() {
 	mt.Insert("1", []byte("pozdrav1"))
 	mt.Insert("2", []byte("pozdrav2"))
 	mt.Insert("4", []byte("pozdrav4"))
@@ -107,6 +110,7 @@ func test() {
 	mt.FindAndDelete("6")
 	mt.PrintMt()
 	node = mt.Find("5")
+	fmt.Printf(string(node.Value))
 }
 
 func (mt *Memtable) GetSL() *SkipList.Skiplist {

@@ -1,6 +1,7 @@
 package Processor
 
 import (
+	"fmt"
 	"main/Configuration"
 	cache "main/LRUCache"
 	"main/Memtable"
@@ -28,8 +29,19 @@ func NewProcessor() *Processor{
 	return &processor
 }
 
-func (processor *Processor) Put(key, value string){
-	//TODO write path
+func (processor *Processor) Put(key, value string) bool{
+	if !processor.tokenBucket.ProcessRequest(){
+		fmt.Println("Prekoracili ste dozvoljeni broj zahteva u jedinici vremena")
+		return false
+	}
+	processor.cache.Add(key, []byte(value))
+	// TODO add to WAL
+	success := processor.memtable.Insert(key, []byte(value))
+	if !success{
+		return false
+	}
+
+	return true
 }
 
 func (processor *Processor) Get(key string) (string, bool){
