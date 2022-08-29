@@ -3,21 +3,22 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"main/Memtable"
 	"main/Processor"
+	"main/SSTable"
 	"os"
 	"strings"
-
 )
 
 var processor *Processor.Processor
 
-func ReplaceWhiteSpace(str string) string{
+func ReplaceWhiteSpace(str string) string {
 	str = strings.Replace(str, "\n", "", 1)
 	str = strings.Replace(str, "\r", "", 1)
 	return str
 }
 
-func ReadInput() (string, string){
+func ReadInput() (string, string) {
 	fmt.Print("Unesite kljuc: ")
 	reader := bufio.NewReader(os.Stdin)
 	key, _ := reader.ReadString('\n')
@@ -28,24 +29,36 @@ func ReadInput() (string, string){
 	return key, value
 }
 
-func Put(){
+func Put() {
 	key, value := ReadInput()
 	processor.Put(key, value)
 }
 
-func main(){
+func Get() {
+	fmt.Print("Unesite Kljuc: ")
+	reader := bufio.NewReader(os.Stdin)
+	key, _ := reader.ReadString('\n')
+	val, flag := processor.Get(key)
+	if flag {
+		SSTable.PrintElement(&val)
+	}
+}
+
+func main() {
 	processor = Processor.NewProcessor()
+	SSTable.Flush(&Memtable.Memtable{})
 	Menu()
 
 }
 
-func Menu(){
-	for true{
+func Menu() {
+	for true {
 		fmt.Println("\n\nIzaberite zeljenu operaciju: ")
 		fmt.Println("1. Put")
 		fmt.Println("2. Get")
 		fmt.Println("3. Delete")
-		fmt.Println("x. Izlaz\n")
+		fmt.Println("x. Izlaz")
+		fmt.Print("Vas Izbor: ")
 
 		reader := bufio.NewReader(os.Stdin)
 		choice, err := reader.ReadString('\n')
@@ -59,7 +72,7 @@ func Menu(){
 			Put()
 			break
 		case "2":
-			//Get()
+			Get()
 			break
 		case "3":
 			//Delete()
