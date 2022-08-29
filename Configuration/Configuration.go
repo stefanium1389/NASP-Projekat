@@ -5,21 +5,21 @@ import (
 	"io/ioutil"
 )
 
-type Config struct{
-	HllP int `yaml:"hll_p"`
-	CacheCapacity int `yaml:"cache_capacity"`
-	TokenBucketResetInterval int64 `yaml:"token_bucket_reset_interval"`
-	TokenBucketMaxTokenNum int `yaml:"token_bucket_max_token_num"`
-	CmsEpsilon float64 `yaml:"cms_epsilon"`
-	CmsDelta float64 `yaml:"cms_delta"`
-	MemtableThreshold int `yaml:"memtable_threshold"`
-	SLMaxLevel int `yaml:"sl_max_level"`
-	SLProbability float32 `yaml:"sl_probability"`
-	WALSegment uint32 `yaml:"wal_segment"`
-	WALLowMark uint32 `yaml:"wal_low_mark"`
+type Config struct {
+	HllP                     int     `yaml:"hll_p"`
+	CacheCapacity            int     `yaml:"cache_capacity"`
+	TokenBucketResetInterval int64   `yaml:"token_bucket_reset_interval"`
+	TokenBucketMaxTokenNum   int     `yaml:"token_bucket_max_token_num"`
+	CmsEpsilon               float64 `yaml:"cms_epsilon"`
+	CmsDelta                 float64 `yaml:"cms_delta"`
+	MemtableThreshold        int     `yaml:"memtable_threshold"`
+	SLMaxLevel               int     `yaml:"sl_max_level"`
+	SLProbability            float32 `yaml:"sl_probability"`
+	WALSegment               uint32  `yaml:"wal_segment"`
+	WALLowMark               uint32  `yaml:"wal_low_mark"`
 }
 
-func Load() *Config{
+func Load() *Config {
 	data, err := ioutil.ReadFile("./Configuration/Config.yaml")
 	config := Config{}
 	if err != nil {

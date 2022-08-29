@@ -14,6 +14,16 @@ import (
 	"strings"
 )
 
+type Element struct {
+	CRC       uint32
+	Timestamp uint64
+	Tombstone bool
+	KeySize   uint64
+	ValueSize uint64
+	Key       string
+	Value     []byte
+}
+
 func Panic(err error) {
 	if err != nil {
 		panic(err.Error())
@@ -51,8 +61,11 @@ func DataSegToBin(node *SkipList.Skipnode) []byte {
 func ResolveFileName(fileName fs.DirEntry) string {
 	name := fileName.Name()
 	num := strings.Split(name, "e")
-	number, err := strconv.Atoi(num[1])
-	Panic(err)
+	number := 0
+	if num[1] == "" {
+		number = 1
+	}
+	number, _ = strconv.Atoi(num[1])
 
 	return "SSTable" + strconv.Itoa(number+1)
 }
@@ -61,7 +74,12 @@ func CreateSSTable(level int) string {
 	files, err := os.ReadDir("./Data/SSTable/Level" + strconv.Itoa(level))
 	Panic(err)
 
-	newFileName := ResolveFileName(files[len(files)-1])
+	newFileName := ""
+	if len(files) == 0 {
+		newFileName = "SSTable"
+	} else {
+		newFileName = ResolveFileName(files[len(files)-1])
+	}
 	err = os.Mkdir("./Data/SSTable/Level"+strconv.Itoa(level)+"/"+newFileName, 0755)
 	Panic(err)
 
@@ -97,13 +115,35 @@ func CreateTOC(level int, file *os.File) {
 	}
 }
 
+func CheckData(path string, key string, ofs int64) *Element {
+	crc, timeStamp, tombStone, keySize, valSize, currKey, value := ReadData(path, key, ofs)
+	if binary.LittleEndian.Uint32(crc) != crc32.ChecksumIEEE(value) {
+		panic("Greska u fajlu")
+	} else {
+		Elem := Element{}
+		Elem.CRC = binary.LittleEndian.Uint32(crc)
+		Elem.Timestamp = binary.LittleEndian.Uint64(timeStamp)
+		if tombStone[0] == 1 {
+			Elem.Tombstone = true
+		} else {
+			Elem.Tombstone = false
+		}
+		Elem.Key = string(currKey)
+		Elem.KeySize = binary.LittleEndian.Uint64(keySize)
+
+		Elem.Value = value
+		Elem.ValueSize = binary.LittleEndian.Uint64(valSize)
+
+		return &Elem
+	}
+}
+
 func Flush(mt *Memtable.Memtable) {
-	//newFileName := CreateSSTable(1)
 	data, index, toc, fltr, mtData, summ := FilesOfSSTable(CreateSSTable(1), 1)
 	defer data.Close()
 	defer index.Close()
 	defer toc.Close()
-	defer fltr.Close()
+	//defer fltr.Close()
 	defer mtData.Close()
 	defer summ.Close()
 
@@ -111,47 +151,49 @@ func Flush(mt *Memtable.Memtable) {
 	CreateTOC(1, toc)
 
 	//Bloom Filter
-	bloom := BloomFilter.CreateBloom(mt.GetThreshold(), 0.99)
+	//bloom := BloomFilter.CreateBloom(mt.GetThreshold(), 0.99)
 
-	dataOffset := 0
-	indexOffset := 0
+	bloom := BloomFilter.CreateBloom(100, 5)
 
-	//Summary
-	summary := Summary{}
-	summary.Elements = make(map[string]int)
-
-	node := mt.Skiplist.Header.Forward[0]
-	summary.FirstKey = mt.Skiplist.Header.Key
-
-	for node != nil {
-		binData := DataSegToBin(node)
-		_, err := data.Write(binData)
-		Panic(err)
-
-		bloom.Add(node.Key)
-		binIndx := IndexSegToBin(node.Key, dataOffset)
-		_, err = index.Write(binIndx)
-		Panic(err)
-
-		dataOffset += len(binData)
-
-		summary.Elements[node.Key] = indexOffset
-
-		indexOffset += len(binIndx)
-
-		nextNode := node.Forward[0]
-		if nextNode == nil {
-			summary.LastKey = node.Key
-		}
-		node = nextNode
-	}
+	//dataOffset := 0
+	//indexOffset := 0
+	//
+	////Summary
+	//summary := Summary{}
+	//summary.Elements = make(map[string]int)
+	//
+	//node := mt.Skiplist.Header.Forward[0]
+	//summary.FirstKey = mt.Skiplist.Header.Key
+	//
+	//for node != nil {
+	//	binData := DataSegToBin(node)
+	//	_, err := data.Write(binData)
+	//	Panic(err)
+	//
+	//	bloom.Add(node.Key)
+	//	binIndx := IndexSegToBin(node.Key, dataOffset)
+	//	_, err = index.Write(binIndx)
+	//	Panic(err)
+	//
+	//	dataOffset += len(binData)
+	//
+	//	summary.Elements[node.Key] = indexOffset
+	//
+	//	indexOffset += len(binIndx)
+	//
+	//	nextNode := node.Forward[0]
+	//	if nextNode == nil {
+	//		summary.LastKey = node.Key
+	//	}
+	//	node = nextNode
+	//}
 	//Dodati deo sa Merkle Stablom
 	//	WriteMerkle()
 	bloom.WriteBloomFilter(fltr)
-	WriteSummary(&summary, summ)
+	//WriteSummary(&summary, summ)
 }
 
-func ReadData(path string, key string, offset int64) ([]byte, []byte, []byte, []byte, []byte, []byte) {
+func ReadData(path string, key string, offset int64) ([]byte, []byte, []byte, []byte, []byte, []byte, []byte) {
 	//+---------------+-----------------+---------------+---------------+-----------------+-...-+--...--+
 	//|    CRC (4B)   | Timestamp (16B) | Tombstone(1B) | Key Size (8B) | Value Size (8B) | Key | Value |
 	//+---------------+-----------------+---------------+---------------+-----------------+-...-+--...--+
@@ -186,7 +228,7 @@ func ReadData(path string, key string, offset int64) ([]byte, []byte, []byte, []
 	if key == string(currentKey) {
 		value := make([]byte, binary.LittleEndian.Uint64(valueSize))
 		_, err = br.Read(value)
-		return crc, tombStone, keySize, valueSize, currentKey, value
+		return crc, timeStamp, tombStone, keySize, valueSize, currentKey, value
 	} else {
 		panic("Error: Key not found in estimated position")
 	}
@@ -253,4 +295,19 @@ func PrintData(path string) {
 			"; Value:", string(value))
 		i++
 	}
+}
+
+func PrintElement(elem *Element) {
+	if elem == nil {
+		fmt.Println("Nepostojeci kljuc")
+		return
+	}
+	fmt.Print("CRC: " + strconv.Itoa(int(elem.CRC)) + ": Timestamp: " + strconv.Itoa(int(elem.Timestamp)))
+	if elem.Tombstone {
+		fmt.Print(": Tombstone: true")
+	} else {
+		fmt.Print(": Tombstone: false")
+	}
+	fmt.Print(": Key Size: " + strconv.Itoa(int(elem.KeySize)) + ": Value Size: " + strconv.Itoa(int(elem.ValueSize)))
+	fmt.Println(": Key: " + elem.Key + ": Value: " + string(elem.Value))
 }

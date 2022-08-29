@@ -41,6 +41,14 @@ func WriteSummary(summary *Summary, file *os.File) {
 	}
 }
 
+func CheckSummary(path, key string) (bool, int64) {
+	offset := ReadSummary(path, key)
+	if offset != -1 {
+		return true, offset
+	} else {
+		return false, offset
+	}
+}
 func ReadSummary(path string, key string) int64 {
 	file, err := os.OpenFile(path, os.O_RDONLY, 0700)
 	Panic(err)

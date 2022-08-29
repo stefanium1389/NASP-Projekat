@@ -58,6 +58,15 @@ func ReadIndex(path string, key string, offset int64) int64 {
 	}
 }
 
+func CheckIndex(path string, key string, offset int64) (bool, int64) {
+	ofs := ReadIndex(path, key, offset)
+	if ofs != -1 {
+		return true, ofs
+	} else {
+		return false, ofs
+	}
+}
+
 //PrintIndex used for debugging, DELETE AFTER FINISHING
 
 func PrintIndex(path string) {

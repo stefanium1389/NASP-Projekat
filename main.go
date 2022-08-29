@@ -3,22 +3,31 @@ package main
 import (
 	"bufio"
 	"fmt"
+<<<<<<< HEAD
+	"main/Memtable"
+=======
 	"main/CountMinSketch"
 	"main/HyperLogLog"
+>>>>>>> f777cccba0688824ddd616d4266f60265fba5d7d
 	"main/Processor"
+	"main/SSTable"
 	"os"
 	"strings"
 )
 
 var processor *Processor.Processor
 
-func ReplaceWhiteSpace(str string) string{
+func ReplaceWhiteSpace(str string) string {
 	str = strings.Replace(str, "\n", "", 1)
 	str = strings.Replace(str, "\r", "", 1)
 	return str
 }
 
+<<<<<<< HEAD
+func ReadInput() (string, string) {
+=======
 func ReadInput(put bool) (string, string){
+>>>>>>> f777cccba0688824ddd616d4266f60265fba5d7d
 	fmt.Print("Unesite kljuc: ")
 	reader := bufio.NewReader(os.Stdin)
 	key, _ := reader.ReadString('\n')
@@ -32,6 +41,11 @@ func ReadInput(put bool) (string, string){
 	return key, value
 }
 
+<<<<<<< HEAD
+func Put() {
+	key, value := ReadInput()
+	processor.Put(key, value)
+=======
 func Put(){
 	key, value := ReadInput(true)
 	success := processor.Put(key, value)
@@ -137,24 +151,41 @@ func CMS(){
 	}else if choice != "x"{
 		fmt.Println("Nepostojeca opcija. ")
 	}
+>>>>>>> f777cccba0688824ddd616d4266f60265fba5d7d
 }
 
-func main(){
+func Get() {
+	fmt.Print("Unesite Kljuc: ")
+	reader := bufio.NewReader(os.Stdin)
+	key, _ := reader.ReadString('\n')
+	val, flag := processor.Get(key)
+	if flag {
+		SSTable.PrintElement(&val)
+	}
+}
+
+func main() {
 	processor = Processor.NewProcessor()
+	SSTable.Flush(&Memtable.Memtable{})
 	Menu()
 
 }
 
-func Menu(){
-	for true{
+func Menu() {
+	for true {
 		fmt.Println("\n\nIzaberite zeljenu operaciju: ")
 		fmt.Println("1. Put")
 		fmt.Println("2. Get")
 		fmt.Println("3. Delete")
+<<<<<<< HEAD
+		fmt.Println("x. Izlaz")
+		fmt.Print("Vas Izbor: ")
+=======
 		fmt.Println("4. Compaction")
 		fmt.Println("5. HLL")
 		fmt.Println("6. CMS")
 		fmt.Println("x. Izlaz\n")
+>>>>>>> f777cccba0688824ddd616d4266f60265fba5d7d
 
 		reader := bufio.NewReader(os.Stdin)
 		choice, err := reader.ReadString('\n')
