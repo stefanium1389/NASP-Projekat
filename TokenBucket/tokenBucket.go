@@ -11,7 +11,7 @@ type TokenBucket struct{
 	resetInterval int64
 }
 
-func TokenBucketConstructor(maxTokenNum int, resetInterval int64) *TokenBucket{
+func NewTokenBucket(maxTokenNum int, resetInterval int64) *TokenBucket{
 	tb := TokenBucket{}
 	tb.lastReset = time.Now().Unix()
 	tb.maxTokenNum = maxTokenNum

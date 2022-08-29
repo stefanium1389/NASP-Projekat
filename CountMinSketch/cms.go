@@ -16,7 +16,7 @@ type CountMinSketch struct{
 	hashFuncs []hash.Hash32
 }
 
-func CountMinSketchConstructor(epsilon, delta float64) *CountMinSketch{
+func NewCountMinSketch(epsilon, delta float64) *CountMinSketch{
 	cms := CountMinSketch{}
 	cms.kNum = cms.CalculateK(epsilon)
 	cms.mNum = cms.CalculateM(delta)

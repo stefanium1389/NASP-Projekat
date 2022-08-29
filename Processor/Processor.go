@@ -18,9 +18,9 @@ type Processor struct{
 func NewProcessor() *Processor{
 	processor := Processor{}
 	config := Configuration.Load()
-	processor.cache = cache.CacheConstructor(config.CacheCapacity)
+	processor.cache = cache.NewCache(config.CacheCapacity)
 	processor.memtable = Memtable.NewMemtable(config.MemtableThreshold, config.SLMaxLevel, config.SLProbability)
-	processor.tokenBucket = TokenBucket.TokenBucketConstructor(config.TokenBucketMaxTokenNum, config.TokenBucketResetInterval)
+	processor.tokenBucket = TokenBucket.NewTokenBucket(config.TokenBucketMaxTokenNum, config.TokenBucketResetInterval)
 	processor.wal = WAL.NewWAL(config.WALSegment, config.WALLowMark)
 
 	//TODO Generate files

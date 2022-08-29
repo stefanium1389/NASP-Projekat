@@ -15,7 +15,7 @@ type Cache struct{
 	hashmap map[string] *list.Element
 }
 
-func CacheConstructor(capacity int) *Cache{
+func NewCache(capacity int) *Cache{
 	cache := Cache{}
 	cache.capacity = capacity
 	cache.list = list.New()
