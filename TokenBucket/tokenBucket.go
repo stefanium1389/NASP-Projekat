@@ -11,7 +11,7 @@ type TokenBucket struct{
 	resetInterval int64
 }
 
-func TokenBucketConstructor(maxTokenNum int, resetInterval int64) *TokenBucket{
+func NewTokenBucket(maxTokenNum int, resetInterval int64) *TokenBucket{
 	tb := TokenBucket{}
 	tb.lastReset = time.Now().Unix()
 	tb.maxTokenNum = maxTokenNum
@@ -21,7 +21,7 @@ func TokenBucketConstructor(maxTokenNum int, resetInterval int64) *TokenBucket{
 	return &tb
 }
 
-func (tokenBucket *TokenBucket) processRequest() bool{
+func (tokenBucket *TokenBucket) ProcessRequest() bool{
 	currentTime := time.Now().Unix()
 	if  currentTime - tokenBucket.lastReset >= tokenBucket.resetInterval{
 		tokenBucket.lastReset = currentTime

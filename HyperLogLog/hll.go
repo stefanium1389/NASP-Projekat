@@ -1,26 +1,28 @@
 package HyperLogLog
 
 import (
+	"bytes"
 	"encoding/gob"
 	"github.com/spaolacci/murmur3"
 	"hash"
 	"math"
 	"math/bits"
-	"os"
 	"time"
 )
 
 type HyperLogLog struct{
 	registers []uint
 	m         uint32	//set size
-	p         uint	//number of leading bits
+	p         int	//number of leading bits
 	hash hash.Hash32
+	timeStamp uint
 }
 
-func NewHyperLogLog(p uint) *HyperLogLog {
+func NewHyperLogLog(p int) *HyperLogLog {
 	hll := HyperLogLog{}
 	hll.m = uint32(math.Pow(2, float64(p)))
-	hll.hash = CreateHashFunction()
+	hll.timeStamp = uint(time.Now().Unix())
+	hll.hash = CreateHashFunction(hll.timeStamp)
 	hll.registers = make([]uint, hll.m)
 	hll.p = p
 	return &hll
@@ -78,39 +80,26 @@ func (hll *HyperLogLog) emptyCount() int {
 	return sum
 }
 
-func(hll *HyperLogLog) Serialize(fileName string){
-	file, err := os.Open(fileName)
-	if err!= nil{
-		file, err = os.Create(fileName)
-		if err != nil{
-			panic(err)
-		}
-	}
-	encoder := gob.NewEncoder(file)
-	err = encoder.Encode(hll)
+func(hll *HyperLogLog) Encode() []byte{
+	encoded := bytes.Buffer{}
+	encoder := gob.NewEncoder(&encoded)
+	err := encoder.Encode(hll)
 	if err != nil {
-		panic(err)
+		panic(err.Error())
 	}
-	err = file.Close()
-	if err != nil {
-		panic(err)
-	}
+	return encoded.Bytes()
 }
 
-func (hll *HyperLogLog) Deserialize(fileName string) {
-	file, err := os.Open(fileName)
+func (hll *HyperLogLog) Decode(data []byte) {
+	encoded := bytes.NewBuffer(data)
+	decoder := gob.NewDecoder(encoded)
+	err := decoder.Decode(hll)
 	if err != nil {
-		panic(err)
+		panic(err.Error())
 	}
-	decoder := gob.NewDecoder(file)
-	err = decoder.Decode(&hll)
-	if err != nil{
-		panic(err)
-	}
-	_ = file.Close()
+	hll.hash = CreateHashFunction(hll.timeStamp)
 }
 
-func CreateHashFunction() hash.Hash32{
-	timeStamp := time.Now().Unix()
-	return murmur3.New32WithSeed(uint32(timeStamp))
+func CreateHashFunction(ts uint) hash.Hash32{
+	return murmur3.New32WithSeed(uint32(ts))
 }

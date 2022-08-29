@@ -23,21 +23,35 @@ type Processor struct {
 func NewProcessor() *Processor {
 	processor := Processor{}
 	config := Configuration.Load()
-	processor.cache = cache.CacheConstructor(config.CacheCapacity)
+	processor.cache = cache.NewCache(config.CacheCapacity)
 	processor.memtable = Memtable.NewMemtable(config.MemtableThreshold, config.SLMaxLevel, config.SLProbability)
-	processor.tokenBucket = TokenBucket.TokenBucketConstructor(config.TokenBucketMaxTokenNum, config.TokenBucketResetInterval)
+	processor.tokenBucket = TokenBucket.NewTokenBucket(config.TokenBucketMaxTokenNum, config.TokenBucketResetInterval)
 	processor.wal = WAL.NewWAL(config.WALSegment, config.WALLowMark)
 	processor.bf = BloomFilter.CreateBloom(100, 5)
 	//TODO Generate files
-
 	return &processor
 }
 
-func (processor *Processor) Put(key, value string) {
-	//TODO write path
+func (processor *Processor) Put(key string, value []byte) bool {
+	if !processor.tokenBucket.ProcessRequest() {
+		fmt.Println("Prekoracili ste dozvoljeni broj zahteva u jedinici vremena")
+		return false
+	}
+	processor.cache.Add(key, value)
+	// TODO add to WAL
+	success := processor.memtable.Insert(key, value)
+	if !success {
+		return false
+	}
+
+	return true
 }
 
 func (processor *Processor) Delete(key string) bool {
+	if !processor.tokenBucket.ProcessRequest() {
+		fmt.Println("Prekoracili ste dozvoljeni broj zahteva u jedinici vremena")
+		return false
+	}
 	_, found := processor.Get(key)
 	if found {
 		//TODO delete from memtable
@@ -49,6 +63,10 @@ func (processor *Processor) Delete(key string) bool {
 }
 
 func (processor *Processor) Get(key string) (SSTable.Element, bool) {
+	if !processor.tokenBucket.ProcessRequest() {
+		fmt.Println("Prekoracili ste dozvoljeni broj zahteva u jedinici vremena")
+		//return "", false
+	}
 	// Cache Check
 	flag, value := processor.cache.Get(key)
 	if flag {

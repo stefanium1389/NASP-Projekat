@@ -1,6 +1,7 @@
 package WAL
 
 import (
+	"bufio"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -9,10 +10,10 @@ import (
 const DIRECTORY = "Data/WAL"
 
 type WriteAheadLog struct {
-	segmentSize uint32
-	recordNum  uint32
+	segmentSize	uint32
+	recordNum	int
 	lowMark     uint32
-	file        *os.File
+	filePath	string
 }
 
 func NewWAL(segmentSize uint32, lwm uint32) *WriteAheadLog{
@@ -22,11 +23,29 @@ func NewWAL(segmentSize uint32, lwm uint32) *WriteAheadLog{
 
 	files, _ := ioutil.ReadDir(DIRECTORY)
 	if len(files) == 0{
-		wal.file, _ = os.Create(DIRECTORY + "/wal_1.bin")
+		os.Create(DIRECTORY + "/wal_1.bin")
+		wal.filePath = DIRECTORY+"/wal_1.bin"
 		wal.recordNum = 0
 	}else{
-		wal.file, _ = os.OpenFile(DIRECTORY + "/wal_" +strconv.Itoa(len(files)), os.O_RDWR, 0666)
+		wal.filePath = DIRECTORY + "/wal_" + strconv.Itoa(len(files))
 	}
-	//TODO recordNum
+	wal.SetRecordNumber()
 	return &wal
 }
+
+func (wal *WriteAheadLog) SetRecordNumber(){
+	file, _ := os.OpenFile(wal.filePath, os.O_RDWR, 0666)
+	defer file.Close()
+	reader := bufio.NewReader(file)
+	recordNum:= 0
+	node := WALNode{}
+	for true {
+		if !node.Decode(reader){
+			break
+		}
+		recordNum++
+	}
+	wal.recordNum = recordNum
+}
+
+

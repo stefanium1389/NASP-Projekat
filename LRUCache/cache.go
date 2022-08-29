@@ -15,7 +15,7 @@ type Cache struct{
 	hashmap map[string] *list.Element
 }
 
-func CacheConstructor(capacity int) *Cache{
+func NewCache(capacity int) *Cache{
 	cache := Cache{}
 	cache.capacity = capacity
 	cache.list = list.New()
@@ -26,24 +26,22 @@ func CacheConstructor(capacity int) *Cache{
 
 func (cache *Cache) Add(key string, value []byte){
 	element, exists := cache.hashmap[key]
+
+	node := Node {
+		key: key,
+		value: value,
+	}
+
 	if exists{
 		cache.list.MoveToBack(element)
 
-		//if updated
-		//cache.hashmap[key] = node
-		//cache.list.Back().Value = node.Value
 	}else{
 		//cache is full -> remove LRU (front of list)
 		if cache.capacity == cache.list.Len(){
 			cache.RemoveLRU()
 		}
-
-		node := Node {
-			key: key,
-			value: value,
-		}
-		element := cache.list.PushBack(node)
-		cache.hashmap[key] = element
+		newElement := cache.list.PushBack(node)
+		cache.hashmap[key] = newElement
 	}
 }
 
