@@ -23,8 +23,7 @@ func NewProcessor() *Processor{
 	processor.memtable = Memtable.NewMemtable(config.MemtableThreshold, config.SLMaxLevel, config.SLProbability)
 	processor.tokenBucket = TokenBucket.NewTokenBucket(config.TokenBucketMaxTokenNum, config.TokenBucketResetInterval)
 	processor.wal = WAL.NewWAL(config.WALSegment, config.WALLowMark)
-
-	//TODO Generate files
+	processor.memtable.Test()
 
 	return &processor
 }
@@ -45,11 +44,19 @@ func (processor *Processor) Put(key, value string) bool{
 }
 
 func (processor *Processor) Get(key string) (string, bool){
+	if !processor.tokenBucket.ProcessRequest(){
+		fmt.Println("Prekoracili ste dozvoljeni broj zahteva u jedinici vremena")
+		return "", false
+	}
 	//TODO read path
 	return "", false
 }
 
 func (processor *Processor) Delete(key string) bool{
+	if !processor.tokenBucket.ProcessRequest(){
+		fmt.Println("Prekoracili ste dozvoljeni broj zahteva u jedinici vremena")
+		return false
+	}
 	_, found := processor.Get(key)
 	if found{
 		//TODO delete from memtable

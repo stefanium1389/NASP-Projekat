@@ -3,7 +3,6 @@ package Memtable
 import (
 	"fmt"
 	"main/SkipList"
-	"sort"
 )
 
 //var memTableNum = 0
@@ -53,7 +52,7 @@ func (mt *Memtable) Insert(key string, value []byte) bool {
 			mt.currentSize += dataSize
 			return mt.Skiplist.Insert(key, value)
 		}else{
-			//Flush()
+			mt.Flush()
 			mt.currentSize += dataSize
 			return mt.Skiplist.Insert(key, value)
 		}
@@ -64,10 +63,6 @@ func (mt *Memtable) Insert(key string, value []byte) bool {
 }
 
 func (mt *Memtable) Flush(){
-	allElements := mt.Skiplist.GetAllElements()
-	sort.Slice(allElements, func(i, j int) bool{
-		return allElements[i].Key < allElements[j].Key
-	})
 
 	// TODO Flush into SSTable
 
@@ -104,27 +99,31 @@ func (mt *Memtable) PrintMt() {
 	mt.Skiplist.DisplayAll()
 }
 
-//func (mt *Memtable) Test() {
-//	mt.Insert("1", []byte("pozdrav1"))
-//	mt.Insert("2", []byte("pozdrav2"))
-//	mt.Insert("4", []byte("pozdrav4"))
-//	mt.Insert("6", []byte("pozdrav6"))
-//	mt.Insert("5", []byte("pozdrav5"))
-//	mt.Insert("3", []byte("pozdrav3"))
-//
-//	node := mt.Find("2")
-//	fmt.Printf(string(node.Value) + "\n")
-//
-//	mt.FindAndDelete("6")
-//	mt.PrintMt()
-//	node = mt.Find("5")
-//	fmt.Printf(string(node.Value))
-//}
-//
-//func (mt *Memtable) GetSL() *SkipList.Skiplist {
-//	return mt.Skiplist
-//}
-//
-//func (mt *Memtable) GetThreshold() int {
-//	return mt.threshold
-//}
+func (mt *Memtable) GetSL() *SkipList.Skiplist {
+	return mt.Skiplist
+}
+
+func (mt *Memtable) GetThreshold() int {
+	return mt.threshold
+}
+
+
+func (mt *Memtable) Test() {
+	//mt.Insert("1", []byte("pozdrav1"))
+	mt.Insert("2", []byte("pozdrav2"))
+	mt.Insert("4", []byte("pozdrav4"))
+	mt.Insert("6", []byte("pozdrav6"))
+	mt.Insert("5", []byte("pozdrav5"))
+	mt.Insert("3", []byte("pozdrav3"))
+	mt.Insert("1", []byte("pozdrav1"))
+	mt.Insert("10", []byte("111"))
+	mt.Insert("7", []byte("23r"))
+
+	//node := mt.Find("2")
+	//fmt.Printf(string(node.Value) + "\n")
+	//
+	//mt.FindAndDelete("6")
+	mt.PrintMt()
+	//node = mt.Find("5")
+	//fmt.Printf(string(node.Value))
+}

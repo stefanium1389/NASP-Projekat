@@ -14,13 +14,15 @@ type CountMinSketch struct{
 	kNum uint32
 	mNum uint32
 	hashFuncs []hash.Hash32
+	timeStamp uint
 }
 
 func NewCountMinSketch(epsilon, delta float64) *CountMinSketch{
 	cms := CountMinSketch{}
 	cms.kNum = cms.CalculateK(epsilon)
 	cms.mNum = cms.CalculateM(delta)
-	cms.hashFuncs = cms.CreateHashFunctions(cms.kNum)
+	cms.timeStamp = uint(time.Now().Unix())
+	cms.hashFuncs = CreateHashFunctions(cms.kNum, cms.timeStamp)
 
 	cms.table = make([][]uint, cms.kNum)
 	for i := range cms.table{
@@ -71,11 +73,10 @@ func (cms *CountMinSketch) CalculateK(delta float64) uint32 {
 	return uint32(math.Ceil(math.Log(math.E / delta)))
 }
 
-func (cms *CountMinSketch) CreateHashFunctions(k uint32) []hash.Hash32 {
+func CreateHashFunctions(k uint32, timeStamp uint) []hash.Hash32 {
 	h := []hash.Hash32{}
-	ts := uint(time.Now().Unix())
 	for i := uint32(0); i < k; i++ {
-		h = append(h, murmur3.New32WithSeed(uint32(ts+1)))
+		h = append(h, murmur3.New32WithSeed(uint32(timeStamp+1)))
 	}
 	return h
 }
@@ -88,8 +89,9 @@ func (cms *CountMinSketch) Serialize (fileName string) {
 			panic(err)
 		}
 	}
+	cms.hashFuncs = nil
 	encoder:= gob.NewEncoder(file)
-	err = encoder.Encode(cms)
+	err = encoder.Encode(&cms)
 	if err != nil{
 		panic(err)
 	}
@@ -105,7 +107,8 @@ func(cms *CountMinSketch) Deserialize(fileName string){
 		panic(err)
 	}
 	decoder := gob.NewDecoder(file)
-	err = decoder.Decode(cms)
+	err = decoder.Decode(&cms)
+	cms.hashFuncs = CreateHashFunctions(cms.kNum, cms.timeStamp)
 	if err != nil{
 		panic(err)
 	}

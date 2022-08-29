@@ -15,12 +15,14 @@ type HyperLogLog struct{
 	m         uint32	//set size
 	p         int	//number of leading bits
 	hash hash.Hash32
+	timeStamp uint
 }
 
 func NewHyperLogLog(p int) *HyperLogLog {
 	hll := HyperLogLog{}
 	hll.m = uint32(math.Pow(2, float64(p)))
-	hll.hash = CreateHashFunction()
+	hll.timeStamp = uint(time.Now().Unix())
+	hll.hash = CreateHashFunction(hll.timeStamp)
 	hll.registers = make([]uint, hll.m)
 	hll.p = p
 	return &hll
@@ -87,6 +89,7 @@ func(hll *HyperLogLog) Serialize(fileName string){
 		}
 	}
 	encoder := gob.NewEncoder(file)
+	hll.hash = nil
 	err = encoder.Encode(hll)
 	if err != nil {
 		panic(err)
@@ -104,13 +107,13 @@ func (hll *HyperLogLog) Deserialize(fileName string) {
 	}
 	decoder := gob.NewDecoder(file)
 	err = decoder.Decode(&hll)
+	hll.hash = CreateHashFunction(hll.timeStamp)
 	if err != nil{
 		panic(err)
 	}
 	_ = file.Close()
 }
 
-func CreateHashFunction() hash.Hash32{
-	timeStamp := time.Now().Unix()
-	return murmur3.New32WithSeed(uint32(timeStamp))
+func CreateHashFunction(ts uint) hash.Hash32{
+	return murmur3.New32WithSeed(uint32(ts))
 }
