@@ -23,7 +23,6 @@ func NewProcessor() *Processor{
 	processor.memtable = Memtable.NewMemtable(config.MemtableThreshold, config.SLMaxLevel, config.SLProbability)
 	processor.tokenBucket = TokenBucket.NewTokenBucket(config.TokenBucketMaxTokenNum, config.TokenBucketResetInterval)
 	processor.wal = WAL.NewWAL(config.WALSegment, config.WALLowMark)
-	processor.memtable.Test()
 
 	return &processor
 }
