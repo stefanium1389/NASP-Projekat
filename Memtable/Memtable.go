@@ -31,8 +31,7 @@ func (mt *Memtable) CurrentSize() int {
 }
 
 func (mt *Memtable) toFlush() bool {
-	elements := mt.currentSize + 1
-	if mt.threshold <= elements{
+	if mt.threshold <= mt.currentSize {
 		return true
 	} else {
 		return false
@@ -51,7 +50,7 @@ func (mt *Memtable) Insert(key string, value []byte) bool {
 		if toFlush == false {
 			mt.currentSize++
 			return mt.Skiplist.Insert(key, value)
-		}else{
+		} else {
 			return false
 		}
 
@@ -77,7 +76,7 @@ func (mt *Memtable) Find(key string) *SkipList.Skipnode {
 func (mt *Memtable) FindAndDelete(key string) bool {
 	node := mt.Find(key)
 	if node != nil {
-		if node.Tombstone == false{
+		if node.Tombstone == false {
 			node.Tombstone = true
 		}
 		return true
@@ -103,7 +102,6 @@ func (mt *Memtable) GetSL() *SkipList.Skiplist {
 func (mt *Memtable) GetThreshold() int {
 	return mt.threshold
 }
-
 
 func (mt *Memtable) Test() {
 	//mt.Insert("1", []byte("pozdrav1"))

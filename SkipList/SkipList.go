@@ -8,23 +8,23 @@ import (
 )
 
 const (
-	DefaultMaxLevel    int     = 15   //Maximal level allow to create in this skip list
+	DefaultMaxLevel int = 15 //Maximal level allow to create in this skip list
 	//DefaultProbability float32 = 0.25 //Default Probability
 )
 
 type Skipnode struct {
-	Key     string
-	Value    []byte
+	Key       string
+	Value     []byte
 	Tombstone bool
-	Forward []*Skipnode
-	Level   int
+	Forward   []*Skipnode
+	Level     int
 }
 
 type Skiplist struct {
-	Header *Skipnode
+	Header      *Skipnode
 	MaxLevel    int
 	Probability float32
-	Level int
+	Level       int
 }
 
 func NewNode(searchKey string, value []byte, createLevel int, maxLevel int) *Skipnode {
@@ -42,18 +42,16 @@ func NewSkipList(maxLevel int, probability float32) *Skiplist {
 	return newList
 }
 
-
 func randomP() float32 {
 	rand.Seed(int64(time.Now().Nanosecond()))
 	return rand.Float32()
 }
 
-
 func (b *Skiplist) SetMaxLevel(maxLevel int) {
 	b.MaxLevel = maxLevel
 }
 func NewHead() *Skipnode {
-	return NewNode( "", nil, 0, DefaultMaxLevel)
+	return NewNode("", nil, 1, DefaultMaxLevel)
 }
 
 func (b *Skiplist) Empty() {
@@ -69,8 +67,7 @@ func (b *Skiplist) RandomLevel() int {
 	return level
 }
 
-
-func (b *Skiplist) Search(searchKey string) (*Skipnode,error) {
+func (b *Skiplist) Search(searchKey string) (*Skipnode, error) {
 	currentNode := b.Header
 
 	for i := b.Level - 1; i >= 0; i-- {
@@ -134,7 +131,7 @@ func (b *Skiplist) Delete(searchKey string) error {
 	if currentNode.Key == searchKey {
 		for i := 0; i <= currentNode.Level-1; i++ {
 			currentNode.Tombstone = true
-			
+
 		}
 
 		for currentNode.Level > 1 && b.Header.Forward[currentNode.Level] == nil {
