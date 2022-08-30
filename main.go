@@ -54,9 +54,21 @@ func Delete() {
 	}
 }
 
+func GetExistingHLL(key string) *HyperLogLog.HyperLogLog{
+	data, found := processor.Get(key)
+	if !found {
+		fmt.Println("Ne postoji HLL sa datim kljucem. ")
+		return nil
+	}
+	hll := HyperLogLog.HyperLogLog{}
+	hll.Decode(data.Value)
+	return &hll
+}
+
 func HLL() {
 	fmt.Println("1. Izaberi postojeci HLL")
-	fmt.Println("2. Dodaj HLL")
+	fmt.Println("2. Dodaj novi HLL")
+	fmt.Println("3. Dodaj vrednosti u HLL")
 	fmt.Println("x. Odustani")
 	reader := bufio.NewReader(os.Stdin)
 	choice, err := reader.ReadString('\n')
@@ -67,13 +79,10 @@ func HLL() {
 	if choice == "1" {
 		key, _ := ReadInput(false)
 		key += "_hll"
-		data, found := processor.Get(key)
-		if !found {
-			fmt.Println("Ne postoji HLL sa datim kljucem. ")
-			return
-		}
-		hll := HyperLogLog.HyperLogLog{}
-		hll.Decode(data.Value)
+		hll := GetExistingHLL(key)
+
+		fmt.Println("Estimate izabranog HLL-a: ", hll.Estimate())
+
 	} else if choice == "2" {
 		key, _ := ReadInput(false)
 		key += "_hll"
@@ -87,14 +96,26 @@ func HLL() {
 		processor.Put(key, data)
 		fmt.Println("Uspesno je dodat novi HLL")
 
+	}else if choice == "3"{
+		key, _ := ReadInput(false)
+		key += "_hll"
+		hll := GetExistingHLL(key)
+		if hll == nil{
+			return
+		}
+		keyEntry, _ := ReadInput(false)
+		hll.Add(keyEntry)
+		data := hll.Encode()
+		processor.Put(key, data)
 	} else if choice != "x" {
 		fmt.Println("Nepostojeca opcija. ")
 	}
 }
 
 func CMS() {
-	fmt.Println("1. Izaberi postojeci CMS")
+	fmt.Println("1. Izaberi postojeci CMS i frekvenciju elementa")
 	fmt.Println("2. Dodaj novi CMS")
+	fmt.Println("3. Dodaj vrednosti u HLL")
 	fmt.Println("x. Odustani")
 	reader := bufio.NewReader(os.Stdin)
 	choice, err := reader.ReadString('\n')
@@ -112,6 +133,12 @@ func CMS() {
 		}
 		cms := CountMinSketch.CountMinSketch{}
 		cms.Decode(data.Value)
+
+
+		keyEntry, _ := ReadInput(false)
+		frequency := cms.GetFrequency(keyEntry)
+		fmt.Println("Frekvencija izabranog elementa u aktivnom CMS-u: ", frequency)
+
 	} else if choice == "2" {
 		key, _ := ReadInput(false)
 		key += "_cms"
@@ -124,6 +151,8 @@ func CMS() {
 		data := cms.Encode()
 		processor.Put(key, data)
 		fmt.Println("Uspesno je dodat novi CMS")
+
+	}else if choice == "3"{
 
 	} else if choice != "x" {
 		fmt.Println("Nepostojeca opcija. ")

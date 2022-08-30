@@ -106,3 +106,4 @@ func (processor *Processor) Get(key string) (SSTable.Element, bool) {
 
 	return SSTable.Element{}, false
 }
+
