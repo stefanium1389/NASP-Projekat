@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"main/CountMinSketch"
 	"main/HyperLogLog"
-	"main/Memtable"
 	"main/Processor"
 	"main/SSTable"
 	"os"
@@ -142,7 +141,7 @@ func Get() {
 
 func main() {
 	processor = Processor.NewProcessor()
-	SSTable.Flush(&Memtable.Memtable{})
+	//SSTable.Flush(&Memtable.Memtable{})
 	Menu()
 
 }

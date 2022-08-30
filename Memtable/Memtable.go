@@ -2,7 +2,6 @@ package Memtable
 
 import (
 	"fmt"
-	"main/SSTable"
 	"main/SkipList"
 )
 
@@ -31,8 +30,9 @@ func (mt *Memtable) CurrentSize() int {
 	return mt.currentSize
 }
 
-func (mt *Memtable) toFlush(dataSize int) bool {
-	if mt.threshold <= mt.currentSize + dataSize {
+func (mt *Memtable) toFlush() bool {
+	elements := mt.currentSize + 1
+	if mt.threshold <= elements{
 		return true
 	} else {
 		return false
@@ -47,15 +47,12 @@ func (mt *Memtable) Insert(key string, value []byte) bool {
 			return true
 		}
 	} else {
-		dataSize := len(key) + len(value)
-		toFlush := mt.toFlush(dataSize)
+		toFlush := mt.toFlush()
 		if toFlush == false {
-			mt.currentSize += dataSize
+			mt.currentSize++
 			return mt.Skiplist.Insert(key, value)
 		}else{
-			mt.Flush()
-			mt.currentSize += dataSize
-			return mt.Skiplist.Insert(key, value)
+			return false
 		}
 
 	}
@@ -63,11 +60,11 @@ func (mt *Memtable) Insert(key string, value []byte) bool {
 	return false
 }
 
-func (mt *Memtable) Flush(){
-	SSTable.Flush(mt)
-
-	mt.Empty()
-}
+//func (mt *Memtable) Flush(){
+//	//SSTable.Flush(mt)
+//
+//	mt.Empty()
+//}
 
 func (mt *Memtable) Find(key string) *SkipList.Skipnode {
 	node, _ := mt.Skiplist.Search(key)
