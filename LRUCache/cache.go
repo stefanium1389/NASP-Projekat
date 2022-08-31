@@ -4,8 +4,6 @@ import (
 	"container/list"
 )
 
-const( DEFAULT_CAPACITY = 5 )
-
 type Node struct{
 	key string
 	value []byte
@@ -17,13 +15,8 @@ type Cache struct{
 	hashmap map[string] *list.Element
 }
 
-func cacheConstructor (capacity int) *Cache{
+func NewCache(capacity int) *Cache{
 	cache := Cache{}
-
-	if capacity <= 0{
-		capacity = DEFAULT_CAPACITY
-	}
-
 	cache.capacity = capacity
 	cache.list = list.New()
 	cache.hashmap = make(map[string]*list.Element, capacity)
@@ -31,40 +24,53 @@ func cacheConstructor (capacity int) *Cache{
 	return &cache
 }
 
-func (cache *Cache) add(key string, value []byte){
+func (cache *Cache) Add(key string, value []byte){
 	element, exists := cache.hashmap[key]
-	if exists{
-		cache.list.MoveToBack(element)
 
-		//if updated
-		//cache.hashmap[key] = node
-		//cache.list.Back().Value = node.Value
+	node := Node {
+		key: key,
+		value: value,
+	}
+
+	if exists{
+		cache.list.Remove(element)
+		el := element.Value.(Node)
+		el.value = value
+		e := cache.list.PushBack(el)
+		cache.hashmap[key] = e
 	}else{
 		//cache is full -> remove LRU (front of list)
 		if cache.capacity == cache.list.Len(){
-			cache.removeLRU()
+			cache.RemoveLRU()
 		}
-
-		node := Node {
-			key: key,
-			value: value,
-		}
-		element := cache.list.PushBack(node)
-		cache.hashmap[key] = element
+		newElement := cache.list.PushBack(node)
+		cache.hashmap[key] = newElement
 	}
 }
 
-func (cache *Cache) removeLRU(){
+func (cache *Cache) RemoveLRU(){
 	lru := cache.list.Front()
 	cache.list.Remove(lru)
 	delete(cache.hashmap, lru.Value.(Node).key)
 }
 
-func (cache *Cache) get(key string) (bool, []byte){
+func (cache *Cache) Get(key string) (bool, []byte){
 	element, exists := cache.hashmap[key]
 	if exists{
 		cache.list.MoveToBack(element)
 		return true, element.Value.(Node).value
 	}
 	return false, nil
+}
+
+func(cache *Cache) Remove(key string) bool{
+	element, exists := cache.hashmap[key]
+	if exists{
+		cache.list.Remove(element)
+		delete(cache.hashmap, key)
+		return true
+	}
+	return false
+
+
 }

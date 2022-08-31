@@ -31,8 +31,7 @@ func (mt *Memtable) CurrentSize() int {
 }
 
 func (mt *Memtable) toFlush() bool {
-	elements := mt.currentSize + 1
-	if mt.threshold <= elements{
+	if mt.threshold <= mt.currentSize {
 		return true
 	} else {
 		return false
@@ -46,25 +45,21 @@ func (mt *Memtable) Insert(key string, value []byte) bool {
 			node.Tombstone = false
 			return true
 		}
+		return mt.Skiplist.Insert(key, value)
 	} else {
 		toFlush := mt.toFlush()
 		if toFlush == false {
 			mt.currentSize++
 			return mt.Skiplist.Insert(key, value)
-		}else{
+
+		} else {
 			return false
 		}
 
 	}
 
-	return false
 }
 
-//func (mt *Memtable) Flush(){
-//	//SSTable.Flush(mt)
-//
-//	mt.Empty()
-//}
 
 func (mt *Memtable) Find(key string) *SkipList.Skipnode {
 	node, _ := mt.Skiplist.Search(key)
@@ -77,8 +72,10 @@ func (mt *Memtable) Find(key string) *SkipList.Skipnode {
 func (mt *Memtable) FindAndDelete(key string) bool {
 	node := mt.Find(key)
 	if node != nil {
-		if node.Tombstone == false{
+
+		if node.Tombstone == false {
 			node.Tombstone = true
+			_ = mt.Skiplist.Delete(key)
 		}
 		return true
 	}
@@ -105,22 +102,4 @@ func (mt *Memtable) GetThreshold() int {
 }
 
 
-func (mt *Memtable) Test() {
-	//mt.Insert("1", []byte("pozdrav1"))
-	mt.Insert("2", []byte("pozdrav2"))
-	mt.Insert("4", []byte("pozdrav4"))
-	mt.Insert("6", []byte("pozdrav6"))
-	mt.Insert("5", []byte("pozdrav5"))
-	mt.Insert("3", []byte("pozdrav3"))
-	mt.Insert("1", []byte("pozdrav1"))
-	mt.Insert("10", []byte("111"))
-	mt.Insert("7", []byte("23r"))
 
-	//node := mt.Find("2")
-	//fmt.Printf(string(node.Value) + "\n")
-	//
-	//mt.FindAndDelete("6")
-	mt.PrintMt()
-	//node = mt.Find("5")
-	//fmt.Printf(string(node.Value))
-}

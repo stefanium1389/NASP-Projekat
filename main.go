@@ -11,6 +11,13 @@ import (
 	"strings"
 )
 
+//TODO dinamicko ucitavanje i otvaranje novih fileova za SSTable
+//TODO Delete
+//TODO Povezati WAL
+//TODO Kompakcije(LSM)
+//TODO Merkle Stablo
+//TODO Konfiguracioni fajl
+
 var processor *Processor.Processor
 
 func ReplaceWhiteSpace(str string) string {
@@ -34,6 +41,8 @@ func ReadInput(put bool) (string, string) {
 }
 
 func Put() {
+
+	//WritePath
 	key, value := ReadInput(true)
 	success := processor.Put(key, []byte(value))
 
@@ -54,9 +63,22 @@ func Delete() {
 	}
 }
 
+
+func GetExistingHLL(key string) *HyperLogLog.HyperLogLog{
+	data, found := processor.Get(key)
+	if !found {
+		fmt.Println("Ne postoji HLL sa datim kljucem. ")
+		return nil
+	}
+	hll := HyperLogLog.HyperLogLog{}
+	hll.Decode(data.Value)
+	return &hll
+}
+
 func HLL() {
 	fmt.Println("1. Izaberi postojeci HLL")
-	fmt.Println("2. Dodaj HLL")
+	fmt.Println("2. Dodaj novi HLL")
+	fmt.Println("3. Dodaj vrednosti u HLL")
 	fmt.Println("x. Odustani")
 	reader := bufio.NewReader(os.Stdin)
 	choice, err := reader.ReadString('\n')
@@ -67,34 +89,53 @@ func HLL() {
 	if choice == "1" {
 		key, _ := ReadInput(false)
 		key += "_hll"
-		data, found := processor.Get(key)
-		if !found {
-			fmt.Println("Ne postoji HLL sa datim kljucem. ")
-			return
-		}
-		hll := HyperLogLog.HyperLogLog{}
-		hll.Decode(data.Value)
+		hll := GetExistingHLL(key)
+
+		fmt.Println("Estimate izabranog HLL-a: ", hll.Estimate())
+
 	} else if choice == "2" {
 		key, _ := ReadInput(false)
 		key += "_hll"
-		_, found := processor.Get(key)
-		if found {
-			fmt.Println("Vec postoji HLL sa ovim kljucem. ")
-			return
-		}
 		hll := HyperLogLog.NewHyperLogLog(6)
 		data := hll.Encode()
 		processor.Put(key, data)
 		fmt.Println("Uspesno je dodat novi HLL")
+
+	}else if choice == "3"{
+		fmt.Println("\nHLL")
+		key, _ := ReadInput(false)
+		key += "_hll"
+
+		hll := GetExistingHLL(key)
+		if hll == nil{
+			return
+		}
+		fmt.Println("\nENTRY KEY")
+		keyEntry, _ := ReadInput(false)
+		hll.Add(keyEntry)
+		data := hll.Encode()
+		processor.Put(key, data)
 
 	} else if choice != "x" {
 		fmt.Println("Nepostojeca opcija. ")
 	}
 }
 
+func GetExistingCMS(key string) *CountMinSketch.CountMinSketch{
+	data, found := processor.Get(key)
+	if !found {
+		fmt.Println("Ne postoji CMS sa datim kljucem. ")
+		return nil
+	}
+	cms := CountMinSketch.CountMinSketch{}
+	cms.Decode(data.Value)
+	return &cms
+}
+
 func CMS() {
-	fmt.Println("1. Izaberi postojeci CMS")
+	fmt.Println("1. Izaberi postojeci CMS i frekvenciju elementa")
 	fmt.Println("2. Dodaj novi CMS")
+	fmt.Println("3. Dodaj vrednosti u CMS")
 	fmt.Println("x. Odustani")
 	reader := bufio.NewReader(os.Stdin)
 	choice, err := reader.ReadString('\n')
@@ -112,6 +153,11 @@ func CMS() {
 		}
 		cms := CountMinSketch.CountMinSketch{}
 		cms.Decode(data.Value)
+
+		keyEntry, _ := ReadInput(false)
+		frequency := cms.GetFrequency(keyEntry)
+		fmt.Println("Frekvencija izabranog elementa u aktivnom CMS-u: ", frequency)
+
 	} else if choice == "2" {
 		key, _ := ReadInput(false)
 		key += "_cms"
@@ -124,6 +170,19 @@ func CMS() {
 		data := cms.Encode()
 		processor.Put(key, data)
 		fmt.Println("Uspesno je dodat novi CMS")
+	}else if choice == "3"{
+		fmt.Println("\nCMS")
+		key, _ := ReadInput(false)
+		key += "_cms"
+		cms := GetExistingCMS(key)
+		if cms == nil{
+			return
+		}
+		fmt.Println("\nENTRY")
+		keyEntry, _ := ReadInput(false)
+		cms.Add(keyEntry)
+		data := cms.Encode()
+		processor.Put(key, data)
 
 	} else if choice != "x" {
 		fmt.Println("Nepostojeca opcija. ")
@@ -132,6 +191,7 @@ func CMS() {
 }
 
 func Get() {
+	//ReadPath
 	key, _ := ReadInput(false)
 	val, flag := processor.Get(key)
 	if flag {
@@ -141,7 +201,6 @@ func Get() {
 
 func main() {
 	processor = Processor.NewProcessor()
-	//SSTable.Flush(&Memtable.Memtable{})
 	Menu()
 
 }
