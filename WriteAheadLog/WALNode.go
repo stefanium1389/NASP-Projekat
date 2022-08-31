@@ -1,4 +1,4 @@
-package WAL
+package WriteAheadLog
 
 import (
 	"encoding/binary"
@@ -19,36 +19,36 @@ import (
    Timestamp = Timestamp of the operation in seconds
 */
 
-type WALNode struct{
-	CRC uint32
+type WALNode struct {
+	CRC       uint32
 	timeStamp uint64
 	tombstone byte
-	keySize uint64
+	keySize   uint64
 	valueSize uint64
-	key []byte
-	value []byte
+	key       []byte
+	value     []byte
 }
 
 func CRC32(data []byte) uint32 {
 	return crc32.ChecksumIEEE(data)
 }
 
-func NewNode(key string ,value []byte) *WALNode{
-	node:= WALNode{
-		CRC: 0,
-		timeStamp : uint64(time.Now().Unix()),
-		tombstone : 0,
-		key : []byte(key),
-		value : []byte(value),
-		keySize : uint64(len(key)),
-		valueSize : uint64(len(value)),
+func NewNode(key string, value []byte) *WALNode {
+	node := WALNode{
+		CRC:       0,
+		timeStamp: uint64(time.Now().Unix()),
+		tombstone: 0,
+		key:       []byte(key),
+		value:     []byte(value),
+		keySize:   uint64(len(key)),
+		valueSize: uint64(len(value)),
 	}
 	node.CRC = node.calculateSum()
 	return &node
 }
 
-func (node *WALNode) Encode() []byte{
-	retVal:= make([]byte, 0)
+func (node *WALNode) Encode() []byte {
+	retVal := make([]byte, 0)
 
 	arr := make([]byte, 4)
 	binary.LittleEndian.PutUint32(arr, node.CRC)
@@ -70,7 +70,6 @@ func (node *WALNode) Encode() []byte{
 func (node *WALNode) calculateSum() uint32 {
 	bytes := make([]byte, 0)
 
-
 	item := make([]byte, 16)
 	binary.LittleEndian.PutUint64(item, node.timeStamp)
 	bytes = append(bytes, item...)
@@ -79,7 +78,7 @@ func (node *WALNode) calculateSum() uint32 {
 
 	item = make([]byte, 8)
 	binary.LittleEndian.PutUint64(item, node.keySize)
-	bytes = append(bytes,item...)
+	bytes = append(bytes, item...)
 
 	item = make([]byte, 8)
 	binary.LittleEndian.PutUint64(item, node.valueSize)

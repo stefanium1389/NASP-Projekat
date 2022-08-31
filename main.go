@@ -63,8 +63,7 @@ func Delete() {
 	}
 }
 
-
-func GetExistingHLL(key string) *HyperLogLog.HyperLogLog{
+func GetExistingHLL(key string) *HyperLogLog.HyperLogLog {
 	data, found := processor.Get(key)
 	if !found {
 		fmt.Println("Ne postoji HLL sa datim kljucem. ")
@@ -101,13 +100,13 @@ func HLL() {
 		processor.Put(key, data)
 		fmt.Println("Uspesno je dodat novi HLL")
 
-	}else if choice == "3"{
+	} else if choice == "3" {
 		fmt.Println("\nHLL")
 		key, _ := ReadInput(false)
 		key += "_hll"
 
 		hll := GetExistingHLL(key)
-		if hll == nil{
+		if hll == nil {
 			return
 		}
 		fmt.Println("\nENTRY KEY")
@@ -121,7 +120,7 @@ func HLL() {
 	}
 }
 
-func GetExistingCMS(key string) *CountMinSketch.CountMinSketch{
+func GetExistingCMS(key string) *CountMinSketch.CountMinSketch {
 	data, found := processor.Get(key)
 	if !found {
 		fmt.Println("Ne postoji CMS sa datim kljucem. ")
@@ -170,12 +169,12 @@ func CMS() {
 		data := cms.Encode()
 		processor.Put(key, data)
 		fmt.Println("Uspesno je dodat novi CMS")
-	}else if choice == "3"{
+	} else if choice == "3" {
 		fmt.Println("\nCMS")
 		key, _ := ReadInput(false)
 		key += "_cms"
 		cms := GetExistingCMS(key)
-		if cms == nil{
+		if cms == nil {
 			return
 		}
 		fmt.Println("\nENTRY")
@@ -196,6 +195,8 @@ func Get() {
 	val, flag := processor.Get(key)
 	if flag {
 		SSTable.PrintElement(&val)
+	} else {
+		fmt.Println("Nije pronadjen odgovarajuci element")
 	}
 }
 
