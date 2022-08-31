@@ -51,11 +51,7 @@ func (b *Skiplist) SetMaxLevel(maxLevel int) {
 	b.MaxLevel = maxLevel
 }
 func NewHead() *Skipnode {
-<<<<<<< HEAD
 	return NewNode( "", nil, 1, DefaultMaxLevel)
-=======
-	return NewNode("", nil, 1, DefaultMaxLevel)
->>>>>>> 9b50209390e60b4b2f2d84258e152acd020cf57d
 }
 
 func (b *Skiplist) Empty() {
