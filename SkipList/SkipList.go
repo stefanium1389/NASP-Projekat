@@ -9,7 +9,6 @@ import (
 
 const (
 	DefaultMaxLevel    int     = 15   //Maximal level allow to create in this skip list
-	//DefaultProbability float32 = 0.25 //Default Probability
 )
 
 type Skipnode struct {
@@ -53,7 +52,7 @@ func (b *Skiplist) SetMaxLevel(maxLevel int) {
 	b.MaxLevel = maxLevel
 }
 func NewHead() *Skipnode {
-	return NewNode( "", nil, 0, DefaultMaxLevel)
+	return NewNode( "", nil, 1, DefaultMaxLevel)
 }
 
 func (b *Skiplist) Empty() {
