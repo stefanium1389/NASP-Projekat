@@ -33,8 +33,11 @@ func (cache *Cache) Add(key string, value []byte){
 	}
 
 	if exists{
-		cache.list.MoveToBack(element)
-
+		cache.list.Remove(element)
+		el := element.Value.(Node)
+		el.value = value
+		e := cache.list.PushBack(el)
+		cache.hashmap[key] = e
 	}else{
 		//cache is full -> remove LRU (front of list)
 		if cache.capacity == cache.list.Len(){

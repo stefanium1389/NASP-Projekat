@@ -27,9 +27,7 @@ func NewProcessor() *Processor {
 	processor.memtable = Memtable.NewMemtable(config.MemtableThreshold, config.SLMaxLevel, config.SLProbability)
 	processor.tokenBucket = TokenBucket.NewTokenBucket(config.TokenBucketMaxTokenNum, config.TokenBucketResetInterval)
 	processor.wal = WAL.NewWAL(config.WALSegment, config.WALLowMark)
-	//processor.bf = &BloomFilter.BloomStruct{}
 	processor.bf = BloomFilter.CreateBloom(100, 5)
-	//TODO Generate files
 	return &processor
 }
 
@@ -45,8 +43,7 @@ func (processor *Processor) Put(key string, value []byte) bool {
 		fmt.Println("MemTable Full")
 		SSTable.Flush(processor.memtable, *processor.bf)
 		processor.memtable.Empty()
-		//SSTable.PrintData("./Data/SSTable/Level1/SSTable/usertable-1-Data.db")
-		//success = processor.memtable.Insert(key, value)
+		success = processor.memtable.Insert(key, value)
 	}
 
 	return true
@@ -58,13 +55,24 @@ func (processor *Processor) Delete(key string) bool {
 		return false
 	}
 	_, found := processor.Get(key)
-	if found {
-		//TODO delete from memtable
-		processor.cache.Remove(key)
-		return true
+	if !found {
+		return false
 	}
+	//TODO delete from WAL
 
-	return false
+	deleted := processor.memtable.FindAndDelete(key)
+	if !deleted{
+		success := processor.memtable.Insert(key, []byte(""))
+		if !success {
+			SSTable.Flush(processor.memtable, *processor.bf)
+			processor.memtable.Empty()
+			processor.memtable.Insert(key, []byte(""))
+		}
+		processor.memtable.FindAndDelete(key)
+
+	}
+	processor.cache.Remove(key)
+	return true
 }
 
 func (processor *Processor) Get(key string) (SSTable.Element, bool) {
@@ -76,7 +84,7 @@ func (processor *Processor) Get(key string) (SSTable.Element, bool) {
 	flag, value := processor.cache.Get(key)
 	if flag {
 		fmt.Println("Vrednost pronadjena u Cache-u: ", string(value))
-		return SSTable.Element{}, flag
+		return SSTable.Element{Key:key, Value: value}, flag
 	}
 	//MemTable Check
 	mtHas := processor.memtable.Find(key)

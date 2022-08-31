@@ -45,12 +45,14 @@ func (mt *Memtable) Insert(key string, value []byte) bool {
 			node.Tombstone = false
 			return true
 		}
+		return mt.Skiplist.Insert(key, value)
 	} else {
 		toFlush := mt.toFlush()
 		if toFlush == false {
 			mt.currentSize++
 			return mt.Skiplist.Insert(key, value)
 		} else {
+			fmt.Println(mt.Skiplist.GetAllElements())
 			return false
 		}
 
@@ -58,12 +60,6 @@ func (mt *Memtable) Insert(key string, value []byte) bool {
 
 	return false
 }
-
-//func (mt *Memtable) Flush(){
-//	//SSTable.Flush(mt)
-//
-//	mt.Empty()
-//}
 
 func (mt *Memtable) Find(key string) *SkipList.Skipnode {
 	node, _ := mt.Skiplist.Search(key)
@@ -78,6 +74,7 @@ func (mt *Memtable) FindAndDelete(key string) bool {
 	if node != nil {
 		if node.Tombstone == false {
 			node.Tombstone = true
+			_ = mt.Skiplist.Delete(key)
 		}
 		return true
 	}
