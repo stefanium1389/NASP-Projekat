@@ -17,6 +17,7 @@ type Config struct {
 	SLProbability            float32 `yaml:"sl_probability"`
 	WALSegment               uint32  `yaml:"wal_segment"`
 	WALLowMark               uint32  `yaml:"wal_low_mark"`
+	FPRateBloomFilter        float64 `yaml:"false_positive_rate"`
 }
 
 func Load() *Config {
@@ -34,6 +35,7 @@ func Load() *Config {
 		config.SLProbability = 0.5
 		config.WALSegment = 5
 		config.WALLowMark = 3
+		config.FPRateBloomFilter = 0.4
 	}
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {

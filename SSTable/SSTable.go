@@ -93,7 +93,7 @@ func CreateSSTable(level int) string {
 	return newFileName
 }
 
-func FilesOfSSTable(FileName string, level int) (*os.File, *os.File, *os.File, *os.File, *os.File, *os.File) {
+func FilesOfSSTable(FileName string, level int) (*os.File, *os.File, *os.File, string, *os.File, *os.File) {
 	prefix := "./Data/SSTable/Level" + strconv.Itoa(level) + "/" + FileName + "/usertable-" + strconv.Itoa(level)
 
 	data, err := os.Create(prefix + "-Data.db")
@@ -102,13 +102,13 @@ func FilesOfSSTable(FileName string, level int) (*os.File, *os.File, *os.File, *
 	Panic(err)
 	TOC, err := os.Create(prefix + "-TOC.db")
 	Panic(err)
-	filter, err := os.Create(prefix + "-Filter.db")
-	Panic(err)
+	//filter, err := os.Create(prefix + "-Filter.db")
+	//Panic(err)
 	metaData, err := os.Create(prefix + "-Metadata.txt")
 	Panic(err)
 	summary, err := os.Create(prefix + "-Summary.db")
 	Panic(err)
-	return data, index, TOC, filter, metaData, summary
+	return data, index, TOC, prefix + "-Filter.db", metaData, summary
 }
 
 func CreateTOC(level int, file *os.File) {
@@ -142,12 +142,12 @@ func CheckData(path string, key string, ofs int64) *Element {
 	}
 }
 
-func Flush(mt *Memtable.Memtable, bloom BloomFilter.BloomStruct) {
+func Flush(mt *Memtable.Memtable, bloom BloomFilter.BloomFilter) {
 	data, index, toc, fltr, mtData, summ := FilesOfSSTable(CreateSSTable(1), 1)
 	defer data.Close()
 	defer index.Close()
 	defer toc.Close()
-	defer fltr.Close()
+	//defer fltr.Close()
 	defer mtData.Close()
 	defer summ.Close()
 
@@ -174,7 +174,7 @@ func Flush(mt *Memtable.Memtable, bloom BloomFilter.BloomStruct) {
 		_, err := data.Write(binData)
 		Panic(err)
 
-		bloom.Add(node.Key)
+		bloom.AddElement([]byte(node.Key))
 		binIndx := IndexSegToBin(node.Key, dataOffset)
 		_, err = index.Write(binIndx)
 		Panic(err)
@@ -198,7 +198,7 @@ func Flush(mt *Memtable.Memtable, bloom BloomFilter.BloomStruct) {
 	merkle := MerkleTree.Root{Root: Root}
 	MerkleTree.Preorder(merkle.Root, mtData)
 
-	bloom.WriteBloomFilter(fltr)
+	bloom.EncodeAndSerialize(fltr)
 
 	WriteSummary(&summary, summ)
 }
