@@ -39,7 +39,7 @@ func NewNode(key string, value []byte) *WALNode {
 		timeStamp: uint64(time.Now().Unix()),
 		tombstone: 0,
 		key:       []byte(key),
-		value:     []byte(value),
+		value:     value,
 		keySize:   uint64(len(key)),
 		valueSize: uint64(len(value)),
 	}

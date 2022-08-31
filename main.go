@@ -79,6 +79,7 @@ func HLL() {
 	fmt.Println("2. Dodaj novi HLL")
 	fmt.Println("3. Dodaj vrednosti u HLL")
 	fmt.Println("x. Odustani")
+	fmt.Print("Vas izbor: ")
 	reader := bufio.NewReader(os.Stdin)
 	choice, err := reader.ReadString('\n')
 	choice = ReplaceWhiteSpace(choice)
@@ -89,12 +90,20 @@ func HLL() {
 		key, _ := ReadInput(false)
 		key += "_hll"
 		hll := GetExistingHLL(key)
+		if hll == nil{
+			return
+		}
 
 		fmt.Println("Estimate izabranog HLL-a: ", hll.Estimate())
 
 	} else if choice == "2" {
 		key, _ := ReadInput(false)
 		key += "_hll"
+		_, found := processor.Get(key)
+		if found {
+			fmt.Println("Vec postoji HLL sa ovim kljucem. ")
+			return
+		}
 		hll := HyperLogLog.NewHyperLogLog(6)
 		data := hll.Encode()
 		processor.Put(key, data)
@@ -136,6 +145,7 @@ func CMS() {
 	fmt.Println("2. Dodaj novi CMS")
 	fmt.Println("3. Dodaj vrednosti u CMS")
 	fmt.Println("x. Odustani")
+	fmt.Print("Vas izbor: ")
 	reader := bufio.NewReader(os.Stdin)
 	choice, err := reader.ReadString('\n')
 	choice = ReplaceWhiteSpace(choice)
@@ -145,14 +155,10 @@ func CMS() {
 	if choice == "1" {
 		key, _ := ReadInput(false)
 		key += "_cms"
-		data, found := processor.Get(key)
-		if !found {
-			fmt.Println("Ne postoji CMS sa datim kljucem. ")
+		cms := GetExistingCMS(key)
+		if cms == nil{
 			return
 		}
-		cms := CountMinSketch.CountMinSketch{}
-		cms.Decode(data.Value)
-
 		keyEntry, _ := ReadInput(false)
 		frequency := cms.GetFrequency(keyEntry)
 		fmt.Println("Frekvencija izabranog elementa u aktivnom CMS-u: ", frequency)

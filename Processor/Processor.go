@@ -38,7 +38,7 @@ func (processor *Processor) Put(key string, value []byte) bool {
 		return false
 	}
 	processor.cache.Add(key, value)
-	processor.wal.Put(key, value)
+	processor.wal.Put(key, value, false)
 	success := processor.memtable.Insert(key, value)
 	if !success {
 		fmt.Println("MemTable Full")
@@ -59,8 +59,7 @@ func (processor *Processor) Delete(key string) bool {
 	if !found {
 		return false
 	}
-	//TODO delete from WAL
-
+	processor.wal.Put(key, nil, true)
 	deleted := processor.memtable.FindAndDelete(key)
 	if !deleted {
 		success := processor.memtable.Insert(key, []byte(""))

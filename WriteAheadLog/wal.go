@@ -48,17 +48,14 @@ func resolvePath() string {
 	return name
 }
 
-func (wal *WriteAheadLog) Put(key string, data []byte) {
+func (wal *WriteAheadLog) Put(key string, data []byte, delete bool) {
 	if wal.checkSegmentLimit() {
 		wal.writeAndClear()
 	}
 	newWalNode := NewNode(key, data)
-	wal.WALNodes = append(wal.WALNodes, newWalNode)
-}
-
-func (wal *WriteAheadLog) delete(key string) {
-	newWalNode := NewNode(key, nil)
-	newWalNode.tombstone = 1
+	if delete{
+		newWalNode.tombstone = 1
+	}
 	wal.WALNodes = append(wal.WALNodes, newWalNode)
 }
 
