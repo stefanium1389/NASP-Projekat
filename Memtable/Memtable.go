@@ -52,7 +52,6 @@ func (mt *Memtable) Insert(key string, value []byte) bool {
 			mt.currentSize++
 			return mt.Skiplist.Insert(key, value)
 		} else {
-			fmt.Println(mt.Skiplist.GetAllElements())
 			return false
 		}
 
