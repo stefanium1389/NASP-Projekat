@@ -67,7 +67,10 @@ func(cache *Cache) Remove(key string) bool{
 	element, exists := cache.hashmap[key]
 	if exists{
 		cache.list.Remove(element)
+		delete(cache.hashmap, key)
 		return true
 	}
 	return false
+
+
 }

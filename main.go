@@ -41,6 +41,7 @@ func ReadInput(put bool) (string, string) {
 }
 
 func Put() {
+
 	//WritePath
 	key, value := ReadInput(true)
 	success := processor.Put(key, []byte(value))
@@ -61,6 +62,7 @@ func Delete() {
 		fmt.Println("Uspesno obrisano. ")
 	}
 }
+
 
 func GetExistingHLL(key string) *HyperLogLog.HyperLogLog{
 	data, found := processor.Get(key)
@@ -94,11 +96,6 @@ func HLL() {
 	} else if choice == "2" {
 		key, _ := ReadInput(false)
 		key += "_hll"
-		//_, found := processor.Get(key)
-		//if found {
-		//	fmt.Println("Vec postoji HLL sa ovim kljucem. ")
-		//	return
-		//}
 		hll := HyperLogLog.NewHyperLogLog(6)
 		data := hll.Encode()
 		processor.Put(key, data)
@@ -157,7 +154,6 @@ func CMS() {
 		cms := CountMinSketch.CountMinSketch{}
 		cms.Decode(data.Value)
 
-
 		keyEntry, _ := ReadInput(false)
 		frequency := cms.GetFrequency(keyEntry)
 		fmt.Println("Frekvencija izabranog elementa u aktivnom CMS-u: ", frequency)
@@ -174,7 +170,6 @@ func CMS() {
 		data := cms.Encode()
 		processor.Put(key, data)
 		fmt.Println("Uspesno je dodat novi CMS")
-
 	}else if choice == "3"{
 		fmt.Println("\nCMS")
 		key, _ := ReadInput(false)
@@ -188,6 +183,7 @@ func CMS() {
 		cms.Add(keyEntry)
 		data := cms.Encode()
 		processor.Put(key, data)
+
 	} else if choice != "x" {
 		fmt.Println("Nepostojeca opcija. ")
 	}
