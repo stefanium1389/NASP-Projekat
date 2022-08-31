@@ -16,6 +16,7 @@ type Skipnode struct {
 	Key       string
 	Value     []byte
 	Tombstone bool
+	TimeStamp uint64
 	Forward   []*Skipnode
 	Level     int
 }
@@ -32,7 +33,7 @@ func NewNode(searchKey string, value []byte, createLevel int, maxLevel int) *Ski
 	for i := 0; i <= maxLevel-1; i++ {
 		forwardEmpty[i] = nil
 	}
-	return &Skipnode{Key: searchKey, Value: value, Forward: forwardEmpty, Level: createLevel}
+	return &Skipnode{Key: searchKey, Value: value, TimeStamp: uint64(time.Now().Unix()), Forward: forwardEmpty, Level: createLevel}
 }
 
 func NewSkipList(maxLevel int, probability float32) *Skiplist {
