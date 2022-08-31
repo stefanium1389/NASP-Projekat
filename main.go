@@ -11,9 +11,6 @@ import (
 	"strings"
 )
 
-//TODO dinamicko ucitavanje i otvaranje novih fileova za SSTable
-//TODO Delete
-//TODO Povezati WAL
 //TODO Kompakcije(LSM)
 //TODO Merkle Stablo
 //TODO Konfiguracioni fajl
