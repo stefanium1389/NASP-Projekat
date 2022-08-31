@@ -27,6 +27,7 @@ func NewProcessor() *Processor {
 	processor.memtable = Memtable.NewMemtable(config.MemtableThreshold, config.SLMaxLevel, config.SLProbability)
 	processor.tokenBucket = TokenBucket.NewTokenBucket(config.TokenBucketMaxTokenNum, config.TokenBucketResetInterval)
 	processor.wal = WAL.NewWAL(config.WALSegment, config.WALLowMark)
+	//processor.bf = &BloomFilter.BloomStruct{}
 	processor.bf = BloomFilter.CreateBloom(100, 5)
 	//TODO Generate files
 	return &processor
@@ -41,7 +42,11 @@ func (processor *Processor) Put(key string, value []byte) bool {
 	// TODO add to WAL
 	success := processor.memtable.Insert(key, value)
 	if !success {
-		return false
+		fmt.Println("MemTable Full")
+		SSTable.Flush(processor.memtable, *processor.bf)
+		processor.memtable.Empty()
+		//SSTable.PrintData("./Data/SSTable/Level1/SSTable/usertable-1-Data.db")
+		//success = processor.memtable.Insert(key, value)
 	}
 
 	return true
@@ -83,22 +88,28 @@ func (processor *Processor) Get(key string) (SSTable.Element, bool) {
 	var file, err = os.OpenFile("./Data/SSTable/Level1/SSTable/usertable-1-Filter.db", os.O_RDWR, 0777)
 	SSTable.Panic(err)
 	processor.bf.ReadBfFromDisk(file)
+	fmt.Println(processor.bf.MaybeContains(key), processor.bf.Hash)
 	if processor.bf.MaybeContains(key) {
 		fmt.Println("Kljuc se mozda nalazi u BloomFilteru --> Pretraga se nastavlja u Summary")
 		//Summary Check
 		//TODO function for file path
+		SSTable.PrintSummary("./Data/SSTable/Level1/SSTable/usertable-1-Summary.db")
 		sumHas, offsetIndx := SSTable.CheckSummary("./Data/SSTable/Level1/SSTable/usertable-1-Summary.db", key)
 		if !sumHas {
 			fmt.Println("Kljuc se ne cuva u Summary strukturi")
 			return SSTable.Element{}, false
 		}
 		//Index
-		indHas, offsetData := SSTable.CheckIndex("./Data/SSTable/Level1/SSTable/usertable-1-Summary.db", key, offsetIndx)
+		fmt.Println("Kluc se nalazi u Summary --> pretraga offset-a u Index")
+		SSTable.PrintIndex("./Data/SSTable/Level1/SSTable/usertable-1-Index.db")
+		indHas, offsetData := SSTable.CheckIndex("./Data/SSTable/Level1/SSTable/usertable-1-Index.db", key, offsetIndx)
 		if !indHas {
 			fmt.Println("Greska pri pronalazanju ofseta...")
 			return SSTable.Element{}, false
 		}
 		//Data
+		fmt.Println("Posle pronalazaenja offseta ulazimo u data file da zavrsimo pretragu")
+		SSTable.PrintData("./Data/SSTable/Level1/SSTable/usertable-1-Data.db")
 		Elem := SSTable.CheckData("./Data/SSTable/Level1/SSTable/usertable-1-Data.db", key, offsetData)
 		processor.cache.Add(key, Elem.Value)
 		return *Elem, true

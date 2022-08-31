@@ -16,21 +16,25 @@ type Summary struct {
 // First/Last Key Size = 8B & Offset = 8B
 
 func WriteSummary(summary *Summary, file *os.File) {
-	firstEl := []byte(summary.FirstKey)
+	binFirstEl := []byte(summary.FirstKey)
 	firstElSize := make([]byte, 8)
-	binary.LittleEndian.PutUint64(firstElSize, uint64(len(firstEl)))
-	first := make([]byte, 0, binary.LittleEndian.Uint64(firstElSize)+8)
+	binary.LittleEndian.PutUint64(firstElSize, uint64(len(binFirstEl)))
+	size1 := binary.LittleEndian.Uint64(firstElSize) + 8
+	first := make([]byte, 0, size1)
 	first = append(first, firstElSize...)
-	first = append(first, firstEl...)
+	first = append(first, binFirstEl...)
+
 	_, err := file.Write(first)
 	Panic(err)
 
-	lastEl := []byte(summary.LastKey)
+	binLastEl := []byte(summary.LastKey)
 	lastElSize := make([]byte, 8)
-	binary.LittleEndian.PutUint64(lastElSize, uint64(len(lastEl)))
-	last := make([]byte, 0, binary.LittleEndian.Uint64(lastElSize)+8)
+	binary.LittleEndian.PutUint64(lastElSize, uint64(len(binLastEl)))
+	size2 := binary.LittleEndian.Uint64(lastElSize) + 8
+	last := make([]byte, 0, size2)
 	last = append(last, lastElSize...)
-	last = append(last, lastEl...)
+	last = append(last, binLastEl...)
+
 	_, err = file.Write(last)
 	Panic(err)
 
@@ -72,10 +76,10 @@ func ReadSummary(path string, key string) int64 {
 	lastElement := make([]byte, binary.LittleEndian.Uint64(keySize))
 	_, err = br.Read(lastElement)
 	Panic(err)
+	//Kljuc nije u summary
 	if key > string(lastElement) {
 		return -1
 	}
-
 	for err == nil {
 		keySize = make([]byte, 8)
 		_, err = br.Read(keySize)
@@ -93,7 +97,6 @@ func ReadSummary(path string, key string) int64 {
 			break
 		}
 		if key == string(currentKey) {
-
 			return int64(binary.LittleEndian.Uint64(offset))
 		}
 	}

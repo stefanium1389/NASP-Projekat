@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
+	"strings"
 )
 
 // Write
@@ -19,13 +20,13 @@ func IndexSegToBin(key string, offset int) []byte {
 	binary.LittleEndian.PutUint64(keySize, uint64(len(binKey)))
 
 	size := binary.LittleEndian.Uint64(keySize) + 16
-	elem := make([]byte, 0, size)
+	element := make([]byte, 0, size)
 
-	elem = append(elem, keySize...)
-	elem = append(elem, binKey...)
-	elem = append(elem, binOffset...)
+	element = append(element, keySize...)
+	element = append(element, binKey...)
+	element = append(element, binOffset...)
 
-	return elem
+	return element
 }
 
 // Read
@@ -34,27 +35,26 @@ func ReadIndex(path string, key string, offset int64) int64 {
 	file, err := os.OpenFile(path, os.O_RDONLY, 0700)
 	Panic(err)
 	defer file.Close()
-
-	_, err = file.Seek(offset, 0)
-	Panic(err)
-	reader := bufio.NewReader(file)
+	if offset != 0 {
+		_, err = file.Seek(offset, 0)
+		Panic(err)
+	}
+	br := bufio.NewReader(file)
 
 	keySize := make([]byte, 8)
-	_, err = reader.Read(keySize)
+	_, err = br.Read(keySize)
 	Panic(err)
-
 	currentKey := make([]byte, binary.LittleEndian.Uint64(keySize))
-	_, err = reader.Read(currentKey)
+	_, err = br.Read(currentKey)
 	Panic(err)
-
 	a := string(currentKey)
-	if key == a {
+	if strings.Compare(a, key) == 0 {
 		dataOffset := make([]byte, 8)
-		_, err = reader.Read(dataOffset)
+		_, err = br.Read(dataOffset)
 		Panic(err)
 		return int64(binary.LittleEndian.Uint64(dataOffset))
 	} else {
-		panic("Key not found")
+		panic("Error: Key not found in estimated position")
 	}
 }
 

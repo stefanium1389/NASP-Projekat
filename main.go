@@ -11,6 +11,13 @@ import (
 	"strings"
 )
 
+//TODO dinamicko ucitavanje i otvaranje novih fileova za SSTable
+//TODO Delete
+//TODO Povezati WAL
+//TODO Kompakcije(LSM)
+//TODO Merkle Stablo
+//TODO Konfiguracioni fajl
+
 var processor *Processor.Processor
 
 func ReplaceWhiteSpace(str string) string {
@@ -34,6 +41,7 @@ func ReadInput(put bool) (string, string) {
 }
 
 func Put() {
+	//WritePath
 	key, value := ReadInput(true)
 	success := processor.Put(key, []byte(value))
 
@@ -161,6 +169,7 @@ func CMS() {
 }
 
 func Get() {
+	//ReadPath
 	key, _ := ReadInput(false)
 	val, flag := processor.Get(key)
 	if flag {
@@ -170,7 +179,6 @@ func Get() {
 
 func main() {
 	processor = Processor.NewProcessor()
-	//SSTable.Flush(&Memtable.Memtable{})
 	Menu()
 
 }

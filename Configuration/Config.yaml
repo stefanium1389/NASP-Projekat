@@ -4,7 +4,7 @@ token_bucket_reset_interval: 10
 token_bucket_max_token_num: 10
 cms_epsilon: 0.1
 cms_delta: 0.1
-memtable_threshold: 100
+memtable_threshold: 5
 sl_max_level: 15
 sl_probability: 0.5
 wal_segment: 5
