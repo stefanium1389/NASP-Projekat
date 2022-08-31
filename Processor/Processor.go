@@ -18,7 +18,7 @@ type Processor struct {
 	cache       *cache.Cache
 	tokenBucket *TokenBucket.TokenBucket
 	wal         *WriteAheadLog.WriteAheadLog
-	bf          *BloomFilter.BloomStruct
+	bf          *BloomFilter.BloomFilter
 }
 
 func NewProcessor() *Processor {
@@ -28,7 +28,8 @@ func NewProcessor() *Processor {
 	processor.memtable = Memtable.NewMemtable(config.MemtableThreshold, config.SLMaxLevel, config.SLProbability)
 	processor.tokenBucket = TokenBucket.NewTokenBucket(config.TokenBucketMaxTokenNum, config.TokenBucketResetInterval)
 	processor.wal = WriteAheadLog.NewWAL(config.WALSegment)
-	processor.bf = BloomFilter.CreateBloom(100, 5)
+	processor.bf = &BloomFilter.BloomFilter{}
+	processor.bf.Initialize(processor.memtable.GetThreshold(), config.FPRateBloomFilter)
 	return &processor
 }
 
@@ -103,11 +104,9 @@ func (processor *Processor) Get(key string) (SSTable.Element, bool) {
 		}
 		fmt.Println(prefix)
 		// Bloom Check
-		var file, err = os.OpenFile(prefix+"usertable-1-Filter.db", os.O_RDWR, 0777)
-		SSTable.Panic(err)
-		processor.bf.ReadBfFromDisk(file)
-		fmt.Println(processor.bf.MaybeContains(key), processor.bf.Hash)
-		if processor.bf.MaybeContains(key) {
+		processor.bf.DeserializeAndDecode(prefix + "usertable-1-Filter.db")
+
+		if processor.bf.MaybeContains([]byte(key)) {
 			fmt.Println("Kljuc se mozda nalazi u BloomFilteru --> Pretraga se nastavlja u Summary")
 			//Summary Check
 			SSTable.PrintSummary(prefix + "usertable-1-Summary.db")
