@@ -12,8 +12,7 @@ import (
 )
 
 //TODO Kompakcije(LSM)
-//TODO Merkle Stablo
-//TODO Konfiguracioni fajl
+//TODO BloomFilter de/serijalizacija
 
 var processor *Processor.Processor
 
@@ -197,7 +196,9 @@ func Get() {
 	key, _ := ReadInput(false)
 	val, flag := processor.Get(key)
 	if flag {
-		SSTable.PrintElement(&val)
+		if !val.Tombstone {
+			SSTable.PrintElement(&val)
+		}
 	} else {
 		fmt.Println("Nije pronadjen odgovarajuci element")
 	}

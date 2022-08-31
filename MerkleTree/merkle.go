@@ -1,33 +1,39 @@
 package MerkleTree
 
 import (
-	"bufio"
 	"crypto/sha1"
+	"encoding/hex"
 	"os"
 )
 
 type Node struct {
-	data  []byte
+	data  [20]byte
 	left  *Node
 	right *Node
 	real  bool
 }
 
-func Load(filePath string) []Node {
-	nodes := []Node{}
+type Root struct {
+	Root *Node
+}
 
-	file, err := os.Open(filePath)
-	if err != nil {
-		panic(err)
-	} else {
-		defer file.Close()
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			nodes = append(nodes, Node{data: []byte(scanner.Text()), real: true})
+func BuildMerkle(parts []Node) *Node {
+	nodes := []Node{}
+	i := 0
+	for ; i < len(parts); i += 2 {
+		if (i + 1) < len(parts) {
+			nodes = append(nodes, Node{left: &parts[i], right: &parts[i+1], data: Hash(parts[i], parts[i+1])})
+		} else {
+			nodes = append(nodes, Node{left: &parts[i], right: &Node{}, data: parts[i].data})
 		}
 	}
-
-	return nodes
+	if len(nodes) == 1 {
+		return &nodes[0]
+	} else if len(nodes) > 1 {
+		return BuildMerkle(nodes)
+	} else {
+		panic("Kako si dosao ovde?")
+	}
 }
 
 func Upload(nodes []Node) {
@@ -38,31 +44,19 @@ func Upload(nodes []Node) {
 		defer file.Close()
 		for i := 0; i < len(nodes); i++ {
 			if nodes[i].real == true {
-				file.WriteString(string(nodes[i].data) + "\n")
+				//file.WriteString(string(nodes[i].data) + "\n")
 			}
 		}
 	}
 }
 
-func Process(nodes []Node) *Node {
-	if len(nodes) > 1 && len(nodes)%2 == 1 {
-		nodes = append(nodes, Node{data: []byte{}, real: false})
+func Process(parts [][20]byte) *Node {
+	var nodes []Node
+	i := 0
+	for ; i < len(parts); i++ {
+		nodes = append(nodes, Node{left: &Node{}, right: &Node{}, data: parts[i]})
 	}
-
-	for i := 0; i < len(nodes); i++ {
-		temp := sha1.Sum(nodes[i].data)
-		nodes[i].data = temp[:]
-	}
-
-	if len(nodes) == 1 {
-		return &nodes[0]
-	} else {
-		parents := []Node{}
-		for i := 0; i < len(nodes); i += 2 {
-			parents = append(parents, Node{data: append(nodes[i].data, nodes[i+1].data...), left: &nodes[i], right: &nodes[i+1], real: true})
-		}
-		return Process(parents)
-	}
+	return BuildMerkle(nodes)
 }
 
 func Sort_Place(nodes *[]Node, node *Node, father int, son int) {
@@ -75,25 +69,21 @@ func Sort_Place(nodes *[]Node, node *Node, father int, son int) {
 	}
 }
 
-func Sort(root *Node) []Node {
-	size := 1
-	for temp := root; temp != nil; temp = temp.left {
-		size *= 2
+func Preorder(root *Node, file *os.File) {
+	if root != nil {
+		file.WriteString(hex.EncodeToString(root.data[:]) + "\n")
+		Preorder(root.left, file)
+		Preorder(root.right, file)
 	}
-
-	nodes := []Node{}
-	for i := 1; i <= size; i++ {
-		nodes = append(nodes, Node{})
-	}
-
-	Sort_Place(&nodes, root, 0, 0)
-
-	return nodes
 }
 
-func main() {
-	nodes := Load("Data.txt")
-	root := Process(nodes)
-	sorted := Sort(root)
-	Upload(sorted)
+func Hash(node1, node2 Node) [20]byte {
+	var left, right [20]byte
+	left = node1.data
+	right = node2.data
+	return sha1.Sum(append(left[:], right[:]...))
+}
+
+func HashData(data []byte) [20]byte {
+	return sha1.Sum(data)
 }
