@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"main/BloomFilter"
 	"main/Memtable"
+	"main/MerkleTree"
 	"main/SkipList"
 	"os"
 	"strconv"
@@ -46,7 +47,7 @@ func DataSegToBin(node *SkipList.Skipnode) []byte {
 	timeStamp := make([]byte, 16)
 	binary.LittleEndian.PutUint64(timeStamp, node.TimeStamp)
 
-	size := binary.LittleEndian.Uint64(keySize) + binary.LittleEndian.Uint64(valueSize) + 16+16+1+4
+	size := binary.LittleEndian.Uint64(keySize) + binary.LittleEndian.Uint64(valueSize) + 16 + 16 + 1 + 4
 	element := make([]byte, 0, size)
 
 	crc := make([]byte, 4)
@@ -93,9 +94,6 @@ func CreateSSTable(level int) string {
 }
 
 func FilesOfSSTable(FileName string, level int) (*os.File, *os.File, *os.File, *os.File, *os.File, *os.File) {
-	/* Each SSTable folder will contain the next files:
-	usertable-1-Data.db; usertable-1-Index.db; usertable-1-TOC.db; usertable-1-Filter.db; usertable-1-Metadata.db
-	*/
 	prefix := "./Data/SSTable/Level" + strconv.Itoa(level) + "/" + FileName + "/usertable-" + strconv.Itoa(level)
 
 	data, err := os.Create(prefix + "-Data.db")
@@ -149,7 +147,7 @@ func Flush(mt *Memtable.Memtable, bloom BloomFilter.BloomStruct) {
 	defer data.Close()
 	defer index.Close()
 	defer toc.Close()
-	//defer fltr.Close()
+	defer fltr.Close()
 	defer mtData.Close()
 	defer summ.Close()
 
@@ -169,6 +167,8 @@ func Flush(mt *Memtable.Memtable, bloom BloomFilter.BloomStruct) {
 	node := mt.Skiplist.Header.Forward[0]
 	summary.FirstKey = mt.Skiplist.Header.Key
 
+	merkleHashVal := make([][20]byte, mt.GetThreshold())
+	i := 0
 	for node != nil {
 		binData := DataSegToBin(node)
 		_, err := data.Write(binData)
@@ -185,15 +185,21 @@ func Flush(mt *Memtable.Memtable, bloom BloomFilter.BloomStruct) {
 
 		indexOffset += len(binIndx)
 
+		merkleHashVal[i] = MerkleTree.HashData(node.Value)
+		i++
+
 		nextNode := node.Forward[0]
 		if nextNode == nil {
 			summary.LastKey = node.Key
 		}
 		node = nextNode
 	}
-	//Dodati deo sa Merkle Stablom
-	//	WriteMerkle()
+	Root := MerkleTree.Process(merkleHashVal)
+	merkle := MerkleTree.Root{Root: Root}
+	MerkleTree.Preorder(merkle.Root, mtData)
+
 	bloom.WriteBloomFilter(fltr)
+
 	WriteSummary(&summary, summ)
 }
 

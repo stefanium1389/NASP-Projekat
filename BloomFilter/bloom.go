@@ -68,7 +68,6 @@ func CreateBloom(capacity int, ratio float64) *BloomStruct {
 }
 
 func (bs *BloomStruct) WriteBloomFilter(file *os.File) {
-	defer file.Close()
 	fmt.Println("PRE fajlaaaa", bs.Hash)
 	bs.Hash = nil
 	encoder := gob.NewEncoder(file)

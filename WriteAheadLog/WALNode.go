@@ -6,19 +6,6 @@ import (
 	"time"
 )
 
-/*
-   +---------------+-----------------+---------------+---------------+-----------------+-...-+--...--+
-   |    CRC (4B)   | Timestamp (16B) | Tombstone(1B) | Key Size (8B) | Value Size (8B) | Key | Value |
-   +---------------+-----------------+---------------+---------------+-----------------+-...-+--...--+
-   CRC = 32bit hash computed over the payload using CRC
-   Key Size = Length of the Key data
-   Tombstone = If this record was deleted and has a value
-   Value Size = Length of the Value data
-   Key = Key data
-   Value = Value data
-   Timestamp = Timestamp of the operation in seconds
-*/
-
 type WALNode struct {
 	CRC       uint32
 	timeStamp uint64
