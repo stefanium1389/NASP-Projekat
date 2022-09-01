@@ -141,7 +141,16 @@ func CheckData(path string, key string, ofs int64) *Element {
 }
 
 func Flush(mt *Memtable.Memtable, bloom BloomFilter.BloomFilter) {
-	data, index, toc, fltr, mtData, summ := FilesOfSSTable(CreateSSTable(1), 1)
+	level, _ := os.ReadDir("./Data/SSTable")
+	var lvl int
+	if len(level) == 1 {
+		var err error
+		lvl, err = strconv.Atoi(strings.Split(level[0].Name(), "l")[1])
+		Panic(err)
+	} else {
+		lvl = len(level)
+	}
+	data, index, toc, fltr, mtData, summ := FilesOfSSTable(CreateSSTable(lvl), lvl)
 	defer data.Close()
 	defer index.Close()
 	defer toc.Close()

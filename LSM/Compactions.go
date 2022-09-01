@@ -72,13 +72,14 @@ func (lsm *LSM) Compaction(){
 			defer summaryFile.Close()
 			SSTable.CreateTOC(i, toc)
 
-			bloomFilter := BloomFilter.Initialize(MT_THRESHOLD, BF_RATE)
+			bloomFilter := BloomFilter.BloomFilter{}
+			bloomFilter.Initialize(MT_THRESHOLD, BF_RATE)
 			summary := SSTable.Summary{}
 			summary.Elements = make(map[string]int)
 
 			merkleHash := make([][20]byte, MT_THRESHOLD)
 
-			lsm.MergeData(file1, file2, data, index, bloomFilter, &summary, &merkleHash)
+			lsm.MergeData(file1, file2, data, index, &bloomFilter, &summary, &merkleHash)
 			merkleIndex = 0
 			//delete
 		}
