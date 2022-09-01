@@ -62,7 +62,7 @@ func (mt *Memtable) Insert(key string, value []byte) bool {
 
 
 func (mt *Memtable) Find(key string) *SkipList.Skipnode {
-	node, _ := mt.Skiplist.Search(key)
+	node := mt.Skiplist.Search(key)
 	if node != nil {
 		return node
 	}
@@ -75,7 +75,10 @@ func (mt *Memtable) FindAndDelete(key string) bool {
 
 		if node.Tombstone == false {
 			node.Tombstone = true
-			_ = mt.Skiplist.Delete(key)
+			deleted := mt.Skiplist.Delete(key)
+			if !deleted{
+				return false
+			}
 		}
 		return true
 	}
