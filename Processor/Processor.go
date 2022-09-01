@@ -28,8 +28,7 @@ func NewProcessor() *Processor {
 	processor.memtable = Memtable.NewMemtable(config.MemtableThreshold, config.SLMaxLevel, config.SLProbability)
 	processor.tokenBucket = TokenBucket.NewTokenBucket(config.TokenBucketMaxTokenNum, config.TokenBucketResetInterval)
 	processor.wal = WriteAheadLog.NewWAL(config.WALSegment)
-	processor.bf = &BloomFilter.BloomFilter{}
-	processor.bf.Initialize(processor.memtable.GetThreshold(), config.FPRateBloomFilter)
+	processor.bf = BloomFilter.Initialize(processor.memtable.GetThreshold(), config.FPRateBloomFilter)
 	return &processor
 }
 
@@ -133,4 +132,8 @@ func (processor *Processor) Get(key string) (SSTable.Element, bool) {
 	}
 
 	return SSTable.Element{}, false
+}
+
+func Compactions(){
+
 }

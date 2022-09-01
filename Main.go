@@ -240,6 +240,7 @@ func Menu() {
 			Delete()
 			break
 		case "4":
+			Processor.Compactions()
 			break
 		case "5":
 			HLL()
