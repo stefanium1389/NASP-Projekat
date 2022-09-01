@@ -2,7 +2,6 @@ package BloomFilter
 
 import (
 	"encoding/gob"
-	"fmt"
 	"github.com/spaolacci/murmur3"
 	"hash"
 	"math"
@@ -17,7 +16,6 @@ type BloomFilter struct {
 }
 
 func (bf *BloomFilter) Initialize(elemRange int, fpRate float64) {
-	fmt.Println(elemRange, fpRate)
 	bf.M = uint(math.Ceil(float64(elemRange) * math.Abs(math.Log(fpRate)) / math.Pow(math.Log(2), float64(2))))
 	bf.K = uint(math.Ceil((float64(bf.M) / float64(elemRange)) * math.Log(2)))
 	bf.Hash, bf.TimeStamp = resolveHash(bf.K, 0)
