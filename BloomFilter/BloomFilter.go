@@ -15,11 +15,14 @@ type BloomFilter struct {
 	Hash            []hash.Hash32
 }
 
+
 func (bf *BloomFilter) Initialize(elemRange int, fpRate float64) {
+
 	bf.M = uint(math.Ceil(float64(elemRange) * math.Abs(math.Log(fpRate)) / math.Pow(math.Log(2), float64(2))))
 	bf.K = uint(math.Ceil((float64(bf.M) / float64(elemRange)) * math.Log(2)))
 	bf.Hash, bf.TimeStamp = resolveHash(bf.K, 0)
 	bf.BitSet = make([]byte, bf.M, bf.M)
+
 }
 
 func resolveHash(k uint, ts uint) ([]hash.Hash32, uint) {

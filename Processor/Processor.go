@@ -5,6 +5,7 @@ import (
 	"main/BloomFilter"
 	"main/Configuration"
 	cache "main/LRUCache"
+	"main/LSM"
 	"main/Memtable"
 	"main/SSTable"
 	"main/TokenBucket"
@@ -20,6 +21,7 @@ type Processor struct {
 	tokenBucket *TokenBucket.TokenBucket
 	wal         *WriteAheadLog.WriteAheadLog
 	bf          *BloomFilter.BloomFilter
+	lsm 		*LSM.LSM
 }
 
 var FPRate float64
@@ -31,6 +33,8 @@ func NewProcessor() *Processor {
 	processor.memtable = Memtable.NewMemtable(config.MemtableThreshold, config.SLMaxLevel, config.SLProbability)
 	processor.tokenBucket = TokenBucket.NewTokenBucket(config.TokenBucketMaxTokenNum, config.TokenBucketResetInterval)
 	processor.wal = WriteAheadLog.NewWAL(config.WALSegment)
+
+	processor.lsm = LSM.NewLSM(5) //config
 	processor.bf = &BloomFilter.BloomFilter{}
 	FPRate = config.FPRateBloomFilter
 	processor.bf.Initialize(processor.memtable.GetThreshold(), FPRate)
@@ -148,4 +152,8 @@ func (processor *Processor) Get(key string) (SSTable.Element, bool) {
 	}
 
 	return SSTable.Element{}, false
+}
+
+func (processor *Processor) Compactions(){
+	processor.lsm.Compaction()
 }

@@ -102,8 +102,6 @@ func FilesOfSSTable(FileName string, level int) (*os.File, *os.File, *os.File, s
 	Panic(err)
 	TOC, err := os.Create(prefix + "-TOC.db")
 	Panic(err)
-	//filter, err := os.Create(prefix + "-Filter.db")
-	//Panic(err)
 	metaData, err := os.Create(prefix + "-Metadata.txt")
 	Panic(err)
 	summary, err := os.Create(prefix + "-Summary.db")

@@ -237,6 +237,7 @@ func Menu() {
 			Delete()
 			break
 		case "4":
+			processor.Compactions()
 			break
 		case "5":
 			HLL()
