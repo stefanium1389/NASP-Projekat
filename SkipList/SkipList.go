@@ -1,7 +1,6 @@
 package SkipList
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -68,7 +67,7 @@ func (b *Skiplist) RandomLevel() int {
 	return level
 }
 
-func (b *Skiplist) Search(searchKey string) (*Skipnode, error) {
+func (b *Skiplist) Search(searchKey string) (*Skipnode) {
 	currentNode := b.Header
 
 	for i := b.Level - 1; i >= 0; i-- {
@@ -80,9 +79,9 @@ func (b *Skiplist) Search(searchKey string) (*Skipnode, error) {
 	currentNode = currentNode.Forward[0]
 
 	if currentNode != nil && currentNode.Key == searchKey {
-		return currentNode, nil
+		return currentNode
 	}
-	return nil, errors.New("Not found.")
+	return nil
 }
 
 func (b *Skiplist) Insert(searchKey string, value []byte) bool {
@@ -118,7 +117,7 @@ func (b *Skiplist) Insert(searchKey string, value []byte) bool {
 	return true
 }
 
-func (b *Skiplist) Delete(searchKey string) error {
+func (b *Skiplist) Delete(searchKey string) bool {
 	currentNode := b.Header
 
 	for i := b.Header.Level - 1; i >= 0; i-- {
@@ -140,9 +139,9 @@ func (b *Skiplist) Delete(searchKey string) error {
 		}
 
 		currentNode = nil
-		return nil
+		return true
 	}
-	return errors.New("Not found")
+	return false
 }
 
 func (b *Skiplist) GetAllElements() []*Skipnode {

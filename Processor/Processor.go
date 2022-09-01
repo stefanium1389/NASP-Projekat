@@ -25,10 +25,11 @@ type Processor struct {
 }
 
 var FPRate float64
+var config *Configuration.Config
 
 func NewProcessor() *Processor {
 	processor := Processor{}
-	config := Configuration.Load()
+	config = Configuration.Load()
 	processor.cache = cache.NewCache(config.CacheCapacity)
 	processor.memtable = Memtable.NewMemtable(config.MemtableThreshold, config.SLMaxLevel, config.SLProbability)
 	processor.tokenBucket = TokenBucket.NewTokenBucket(config.TokenBucketMaxTokenNum, config.TokenBucketResetInterval)
@@ -53,7 +54,7 @@ func (processor *Processor) Put(key string, value []byte) bool {
 	if !success {
 		fmt.Println("*** MemTable Full ***")
 		SSTable.Flush(processor.memtable, *processor.bf)
-		processor.memtable.Empty()
+		processor.memtable = Memtable.NewMemtable(config.MemtableThreshold, config.SLMaxLevel, config.SLProbability)
 		processor.bf.Initialize(processor.memtable.GetThreshold(), FPRate)
 		success = processor.memtable.Insert(key, value)
 	}
@@ -101,7 +102,8 @@ func (processor *Processor) Get(key string) (SSTable.Element, bool) {
 	mtHas := processor.memtable.Find(key)
 	if mtHas != nil {
 		fmt.Println("Kljuc pronadjen u MemTable-u")
-		return SSTable.Element{Key: mtHas.Key, Value: mtHas.Value}, true
+		return SSTable.Element{Key: mtHas.Key, Value: mtHas.Value, Timestamp: mtHas.TimeStamp, Tombstone: mtHas.Tombstone,
+			KeySize: uint64(len(mtHas.Key)), ValueSize: uint64(len(mtHas.Value))}, true
 	}
 
 	level, _ := os.ReadDir("./Data/SSTable/")
