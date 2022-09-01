@@ -2,7 +2,6 @@ package WriteAheadLog
 
 import (
 	"encoding/binary"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -44,7 +43,6 @@ func resolvePath() string {
 	} else {
 		name = "./Data/WAL/wal" + strconv.Itoa(len(files)) + ".db"
 	}
-	fmt.Println("ime fajla", name)
 	return name
 }
 
@@ -53,7 +51,7 @@ func (wal *WriteAheadLog) Put(key string, data []byte, delete bool) {
 		wal.writeAndClear()
 	}
 	newWalNode := NewNode(key, data)
-	if delete{
+	if delete {
 		newWalNode.tombstone = 1
 	}
 	wal.WALNodes = append(wal.WALNodes, newWalNode)

@@ -86,7 +86,7 @@ func HLL() {
 		key, _ := ReadInput(false)
 		key += "_hll"
 		hll := GetExistingHLL(key)
-		if hll == nil{
+		if hll == nil {
 			return
 		}
 
@@ -152,7 +152,7 @@ func CMS() {
 		key, _ := ReadInput(false)
 		key += "_cms"
 		cms := GetExistingCMS(key)
-		if cms == nil{
+		if cms == nil {
 			return
 		}
 		keyEntry, _ := ReadInput(false)
@@ -212,7 +212,7 @@ func main() {
 
 func Menu() {
 	for true {
-		fmt.Println("\n\nIzaberite zeljenu operaciju: ")
+		fmt.Println("Izaberite zeljenu operaciju: ")
 		fmt.Println("1. Put")
 		fmt.Println("2. Get")
 		fmt.Println("3. Delete")
