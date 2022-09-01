@@ -11,9 +11,6 @@ import (
 	"strings"
 )
 
-//TODO Kompakcije(LSM)
-//TODO BloomFilter de/serijalizacija
-
 var processor *Processor.Processor
 
 func ReplaceWhiteSpace(str string) string {
